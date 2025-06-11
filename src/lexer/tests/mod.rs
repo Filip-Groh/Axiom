@@ -1,6 +1,7 @@
 mod common;
 mod numbers;
 mod identifiers;
+mod operators;
 
 #[cfg(test)]
 mod general {

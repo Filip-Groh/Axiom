@@ -8,5 +8,6 @@ mod tokens;
 pub enum Token {
     Number(Location, NumberToken),
     Identifier(Location, IdentifierToken),
+    Operator(Location, OperatorToken),
     Unknown(Location, char),
 }

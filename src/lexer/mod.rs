@@ -1,7 +1,7 @@
 mod tests;
 
 use std::error::Error;
-use crate::token::{Location, NumberToken, Token, IdentifierToken};
+use crate::token::{Location, NumberToken, Token, IdentifierToken, OperatorType, OperatorToken};
 
 pub struct Lexer{
     chars: Vec<char>,
@@ -53,6 +53,7 @@ impl Lexer {
                 }
                 char if char.is_ascii_digit() => self.parse_number(),
                 char if char.is_alphabetic() => self.parse_identifier(),
+                '+' | '-' | '*' | '/' => self.parse_operator(),
                 _ => {
                     let location = Location::new(self.index, self.index);
                     self.tokens.push(Token::Unknown(location, current_char));
@@ -105,32 +106,26 @@ impl Lexer {
         self.tokens.push(Token::Identifier(location, identifier_token));
     }
 
-    // fn parse_operator(&mut self) {
-    //     match self.chars.peek() {
-    //         Some(char) => {
-    //             match char {
-    //                 '+' => {
-    //                     self.chars.next();
-    //                     self.tokens.push(Token::Operator(OperatorToken::Addition()))
-    //                 }
-    //                 '-' => {
-    //                     self.chars.next();
-    //                     self.tokens.push(Token::Operator(OperatorToken::Subtraction()))
-    //                 }
-    //                 '*' => {
-    //                     self.chars.next();
-    //                     self.tokens.push(Token::Operator(OperatorToken::Multiplication()))
-    //                 }
-    //                 '/' => {
-    //                     self.chars.next();
-    //                     self.tokens.push(Token::Operator(OperatorToken::Division()))
-    //                 }
-    //                 _ => ()
-    //             }
-    //         }
-    //         None => ()
-    //     }
-    // }
+    fn parse_operator(&mut self) {
+        let current_operator = self.current_char.unwrap();
+        let location = Location::new(self.index, self.index);
+        
+        match current_operator {
+            '+' => {
+                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorType::Addition())))
+            }
+            '-' => {
+                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorType::Subtraction())))
+            }
+            '*' => {
+                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorType::Multiplication())))
+            }
+            '/' => {
+                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorType::Division())))
+            }
+            _ => ()
+        }
+    }
     //
     // fn parse_parentheses(&mut self) {
     //     match self.chars.peek() {

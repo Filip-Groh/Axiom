@@ -56,3 +56,17 @@ fn test_lexer_numbers_multiple_numbers_whitespace() {
         Token::Number(Location::new(19, 19), NumberToken::new("0".to_string())),
     ]));
 }
+
+#[test]
+fn test_lexer_numbers_long_number() {
+    assert!(test_lexer("123456789123456789123456789", vec![
+        Token::Number(Location::new(0, 26), NumberToken::new("123456789123456789123456789".to_string())),
+    ]));
+}
+
+#[test]
+fn test_lexer_numbers_long_number_whitespace() {
+ assert!(test_lexer(" \n   123456789123456789123456789    \n   ", vec![
+     Token::Number(Location::new(5, 31), NumberToken::new("123456789123456789123456789".to_string())),
+ ]));
+}

@@ -1,7 +1,7 @@
 mod tests;
 
 use std::error::Error;
-use crate::token::{Location, NumberToken, Token};
+use crate::token::{Location, NumberToken, Token, IdentifierToken};
 
 pub struct Lexer{
     chars: Vec<char>,
@@ -52,6 +52,7 @@ impl Lexer {
                     continue;
                 }
                 char if char.is_ascii_digit() => self.parse_number(),
+                char if char.is_alphabetic() => self.parse_identifier(),
                 _ => {
                     let location = Location::new(self.index, self.index);
                     self.tokens.push(Token::Unknown(location, current_char));
@@ -82,6 +83,27 @@ impl Lexer {
         let number_token = NumberToken::new(String::from_iter(current_number));
         self.tokens.push(Token::Number(location, number_token));
     }
+    
+    fn parse_identifier(&mut self) {
+        let start_location = self.index;
+        let mut current_identifier = self.current_char.unwrap().to_string();
+    
+        loop {
+            match self.peek() {
+                Some(char) => {
+                    match char {
+                        x if x.is_alphabetic() || x.is_ascii_digit() => current_identifier.push(self.take().unwrap()),
+                        _ => break
+                    }
+                }
+                None => break
+            }
+        }
+        
+        let location = Location::new(start_location, self.index);
+        let identifier_token = IdentifierToken::new(current_identifier);
+        self.tokens.push(Token::Identifier(location, identifier_token));
+    }
 
     // fn parse_operator(&mut self) {
     //     match self.chars.peek() {
@@ -108,24 +130,6 @@ impl Lexer {
     //         }
     //         None => ()
     //     }
-    // }
-    //
-    // fn parse_identifier(&mut self) {
-    //     let mut current_identifier = String::new();
-    //
-    //     loop {
-    //         match self.chars.peek() {
-    //             Some(char) => {
-    //                 match char {
-    //                     x if x.is_alphabetic() => current_identifier.push(self.chars.next().unwrap()),
-    //                     _ => break
-    //                 }
-    //             }
-    //             None => break
-    //         }
-    //     }
-    //
-    //     self.tokens.push(Token::Identifier(current_identifier))
     // }
     //
     // fn parse_parentheses(&mut self) {

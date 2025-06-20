@@ -1,0 +1,30 @@
+AST:
+- File 
+    = KEYWORD["FUNCTION"] IDENTIFIER PARENTHESES["("] IDENTIFIER* PARENTHESES[")"] Scope
+    
+- Scope 
+    = PARENTHESES["{"] Statement* PARENTHESES["}"]
+    
+- Statement 
+    = KEYWORD["LET"] IDENTIFIER OPERATOR["="] Expression
+    
+- Expression 
+    = Additive
+    
+- Additive 
+    = Multiplicative ((OPERATOR["+"] / OPERATOR["-"]) Multiplicative)*
+    
+- Multiplicative 
+    = Primary ((OPERATOR["*"] / OPERATOR["/"]) Primary)*
+    
+- Primary 
+    = NUMBER 
+    / IDENTIFIER 
+    / PARENTHESES["("] Expression PARENTHESES[")"]
+
+Tokens:
+- NUMBER
+- IDENTIFIER
+- KEYWORD["LET", "FUNCTION"]
+- OPERATOR["+", "-", "*", "/", "="]
+- PARENTHESES["(", ")", "{", "}"]

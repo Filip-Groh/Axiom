@@ -1,6 +1,6 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct NumberToken {
-    value: String,
+    pub value: String,
 }
 
 impl NumberToken {

@@ -1,6 +1,6 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct IdentifierToken {
-    name: String,
+    pub name: String,
 }
 
 impl IdentifierToken {

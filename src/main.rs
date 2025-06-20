@@ -1,10 +1,13 @@
 mod lexer;
 mod token;
 mod user_input;
+mod parser;
+mod ast;
 
 // use inkwell::context::Context;
 use std::error::Error;
 use crate::lexer::Lexer;
+use crate::parser::Parser;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // let context = Context::create();
@@ -25,7 +28,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         let input = user_input::input_line();
         let tokens = Lexer::new(&input).parse()?;
         if tokens.len() == 0 {break}
-        println!("Tokens: {:?}", tokens);
+        println!("Tokens: \n{:?}", tokens);
+        let ast = Parser::new(tokens).parse()?;
+        println!("AST: ");
+        ast.display(0)
     }
 
     Ok(())

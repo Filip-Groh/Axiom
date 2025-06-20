@@ -1,7 +1,7 @@
 mod tests;
 
 use std::error::Error;
-use crate::token::{Location, NumberToken, Token, IdentifierToken, OperatorType, OperatorToken};
+use crate::token::{Location, NumberToken, Token, IdentifierToken, OperatorToken, OperatorCategory, OperatorArithmeticType, OperatorAssignmentType, ParenthesesToken, ParenthesesType, ParenthesesState, KeywordToken};
 
 pub struct Lexer{
     chars: Vec<char>,
@@ -15,7 +15,7 @@ impl Lexer {
         let chars: Vec<char> = text.chars().collect();
         
         Lexer {
-            current_char: chars.get(0).copied(),
+            current_char: chars.get(0).cloned(),
             index: 0,
             tokens: Vec::new(),
             chars
@@ -23,12 +23,12 @@ impl Lexer {
     }
     
     fn peek(&mut self) -> Option<char> {
-        self.chars.get(self.index + 1).copied()
+        self.chars.get(self.index + 1).cloned()
     }
     
     fn step(&mut self) {
         self.index += 1;
-        self.current_char = self.chars.get(self.index).copied();
+        self.current_char = self.chars.get(self.index).cloned();
     }
     
     fn take(&mut self) -> Option<char> {
@@ -53,7 +53,8 @@ impl Lexer {
                 }
                 char if char.is_ascii_digit() => self.parse_number(),
                 char if char.is_alphabetic() => self.parse_identifier(),
-                '+' | '-' | '*' | '/' => self.parse_operator(),
+                char if Lexer::is_operator(char) => self.parse_operator(),
+                char if Lexer::is_parentheses(char) => self.parse_parentheses(),
                 _ => {
                     let location = Location::new(self.index, self.index);
                     self.tokens.push(Token::Unknown(location, current_char));
@@ -102,8 +103,22 @@ impl Lexer {
         }
         
         let location = Location::new(start_location, self.index);
-        let identifier_token = IdentifierToken::new(current_identifier);
-        self.tokens.push(Token::Identifier(location, identifier_token));
+        let keyword_type = KeywordToken::get_keyword_type(&current_identifier);
+        match keyword_type {
+            Some(keyword) => {
+                self.tokens.push(Token::Keyword(location, KeywordToken::new(keyword)));
+            }
+            None => {
+                self.tokens.push(Token::Identifier(location, IdentifierToken::new(current_identifier)));
+            }
+        }
+    }
+    
+    fn is_operator(current_char: char) -> bool {
+        match current_char {
+            '+' | '-' | '*' | '/' | '=' => true,
+            _ => false
+        }
     }
 
     fn parse_operator(&mut self) {
@@ -112,37 +127,49 @@ impl Lexer {
         
         match current_operator {
             '+' => {
-                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorType::Addition())))
+                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorCategory::Arithmetic(OperatorArithmeticType::Addition))))
             }
             '-' => {
-                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorType::Subtraction())))
+                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorCategory::Arithmetic(OperatorArithmeticType::Subtraction))))
             }
             '*' => {
-                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorType::Multiplication())))
+                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorCategory::Arithmetic(OperatorArithmeticType::Multiplication))))
             }
             '/' => {
-                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorType::Division())))
+                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorCategory::Arithmetic(OperatorArithmeticType::Division))))
+            }
+            '=' => {
+                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorCategory::Assignment(OperatorAssignmentType::Assignment))))
             }
             _ => ()
         }
     }
-    //
-    // fn parse_parentheses(&mut self) {
-    //     match self.chars.peek() {
-    //         Some(char) => {
-    //             match char {
-    //                 '(' => {
-    //                     self.chars.next();
-    //                     self.tokens.push(Token::Parentheses(ParenthesesToken::Opening()))
-    //                 }
-    //                 ')' => {
-    //                     self.chars.next();
-    //                     self.tokens.push(Token::Parentheses(ParenthesesToken::Closing()))
-    //                 }
-    //                 _ => ()
-    //             }
-    //         }
-    //         None => ()
-    //     }
-    // }
+    
+    fn is_parentheses(current_char: char) -> bool {
+        match current_char {
+            '(' | ')' | '{' | '}' => true,
+            _ => false
+        }
+    }
+    
+    fn parse_parentheses(&mut self) {
+        let current_parentheses = self.current_char.unwrap();
+        let location = Location::new(self.index, self.index);
+        
+        match current_parentheses {
+            '(' => {
+                self.tokens.push(Token::Parentheses(location, ParenthesesToken::new(ParenthesesType::Round(ParenthesesState::Opening))))
+            }
+            ')' => {
+                self.tokens.push(Token::Parentheses(location, ParenthesesToken::new(ParenthesesType::Round(ParenthesesState::Closing))))
+            }
+            '{' => {
+                self.tokens.push(Token::Parentheses(location, ParenthesesToken::new(ParenthesesType::Curly(ParenthesesState::Opening))))
+            }
+            '}' => {
+                self.tokens.push(Token::Parentheses(location, ParenthesesToken::new(ParenthesesType::Curly(ParenthesesState::Closing))))
+            }
+            _ => ()
+        }
+    }
 }

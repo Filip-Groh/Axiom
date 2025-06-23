@@ -10,7 +10,8 @@ pub enum Node {
     BinaryOperation(Location, Box<BinaryOperationNode>),
     Assignment(Location, Box<AssignmentNode>),
     Scope(Location, ScopeNode),
-    Function(Location, Box<FunctionNode>)
+    Function(Location, Box<FunctionNode>),
+    Return(Location, Box<ReturnNode>),
 }
 
 impl Node {
@@ -23,6 +24,7 @@ impl Node {
             Node::Assignment(_, assignment_node) => assignment_node.display(indent),
             Node::Scope(_, scope_node) => scope_node.display(indent),
             Node::Function(_, function_node) => function_node.display(indent),
+            Node::Return(_, return_node) => return_node.display(indent),
         }
     }
     
@@ -35,6 +37,7 @@ impl Node {
                 Node::Assignment(location, _) => location,
                 Node::Scope(location, _) => location,
                 Node::Function(location, _) => location,
+                Node::Return(location, _) => location,
             }
         }
 }

@@ -1,4 +1,4 @@
-use crate::ast::{AssignmentNode, BinaryOperationNode, BinaryOperationType, FileNode, FunctionNode, IdentifierNode, Node, NumberNode, ScopeNode};
+use crate::ast::{AssignmentNode, BinaryOperationNode, BinaryOperationType, FileNode, FunctionNode, IdentifierNode, Node, NumberNode, ReturnNode, ScopeNode};
 use crate::error::AxiomError;
 use crate::error::location::Location;
 use crate::token::{KeywordType, OperatorArithmeticType, OperatorAssignmentType, OperatorCategory, ParenthesesState, ParenthesesType, Token};
@@ -175,6 +175,12 @@ impl Parser {
                     }
                     _ => Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected identifier".into()))
                 }
+            }
+            Token::Keyword(keyword_location, keyword_token) if matches!(keyword_token.keyword_type, KeywordType::Return) => {
+                self.step();
+                let expression = self.expression()?;
+                let expression_location = expression.location();
+                Ok(Box::from(Node::Return(Location::from_locations(vec![keyword_location, expression_location.clone()]), Box::from(ReturnNode::new(*expression)))))
             }
             _ => Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Unexpected token".into()))
         }

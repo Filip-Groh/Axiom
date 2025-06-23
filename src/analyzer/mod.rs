@@ -76,6 +76,9 @@ impl Analyzer {
                 self.analyze(&binary_operation_node.left);
                 self.analyze(&binary_operation_node.right);
             }
+            Node::Return(location, return_node) => {
+                self.analyze(&return_node.expression);
+            }
             Node::Number(location, number_node) => {}
         }
         

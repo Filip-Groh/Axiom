@@ -1,7 +1,8 @@
 #[derive(Debug, PartialEq, Clone)]
 pub enum KeywordType {
     Let,
-    Function
+    Function,
+    Return
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -20,6 +21,7 @@ impl KeywordToken {
         match identifier.as_str() {
             "let" => Some(KeywordType::Let),
             "function" => Some(KeywordType::Function),
+            "return" => Some(KeywordType::Return),
             _ => None,
         }
     }

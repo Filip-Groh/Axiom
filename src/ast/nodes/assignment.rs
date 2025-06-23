@@ -1,8 +1,8 @@
 use crate::ast::{IdentifierNode, Node};
 
 pub struct AssignmentNode {
-    identifier_node: IdentifierNode,
-    expression: Node,
+    pub identifier_node: IdentifierNode,
+    pub expression: Node,
 }
 
 impl AssignmentNode {

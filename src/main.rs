@@ -3,9 +3,12 @@ mod token;
 mod user_input;
 mod parser;
 mod ast;
+mod error;
+mod analyzer;
 
 // use inkwell::context::Context;
 use std::error::Error;
+use crate::analyzer::Analyzer;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 
@@ -31,7 +34,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("Tokens: \n{:?}", tokens);
         let ast = Parser::new(tokens).parse()?;
         println!("AST: ");
-        ast.display(0)
+        ast.display(0);
+        let mut analyzer = Analyzer::new();
+        let errors = analyzer.analyze(&ast);
+        errors.iter().for_each(|err| println!("{}", err));
     }
 
     Ok(())

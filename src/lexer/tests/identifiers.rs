@@ -1,7 +1,8 @@
+use crate::error::location::Location;
 #[cfg(test)]
 
 use crate::lexer::tests::common::test_lexer;
-use crate::token::{IdentifierToken, Location, NumberToken, Token};
+use crate::token::{IdentifierToken, NumberToken, Token};
 
 #[test]
 fn test_lexer_identifiers_lowercase() {

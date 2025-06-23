@@ -1,7 +1,8 @@
 mod tests;
 
 use std::error::Error;
-use crate::token::{Location, NumberToken, Token, IdentifierToken, OperatorToken, OperatorCategory, OperatorArithmeticType, OperatorAssignmentType, ParenthesesToken, ParenthesesType, ParenthesesState, KeywordToken};
+use crate::error::location::Location;
+use crate::token::{NumberToken, Token, IdentifierToken, OperatorToken, OperatorCategory, OperatorArithmeticType, OperatorAssignmentType, ParenthesesToken, ParenthesesType, ParenthesesState, KeywordToken};
 
 pub struct Lexer{
     chars: Vec<char>,

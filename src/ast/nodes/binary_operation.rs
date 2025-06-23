@@ -9,8 +9,8 @@ pub enum BinaryOperationType {
 }
 
 pub struct BinaryOperationNode {
-    left: Node,
-    right: Node,
+    pub left: Node,
+    pub right: Node,
     operation_type: BinaryOperationType,
 }
 

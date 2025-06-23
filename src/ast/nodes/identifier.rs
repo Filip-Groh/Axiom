@@ -1,7 +1,8 @@
-use crate::token::{IdentifierToken, Location};
+use crate::error::location::Location;
+use crate::token::{IdentifierToken};
 
 pub struct IdentifierNode {
-    location: Location,
+    pub location: Location,
     pub identifier_token: IdentifierToken,
 }
 

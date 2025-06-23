@@ -1,14 +1,12 @@
-use crate::token::{Location, NumberToken};
+use crate::token::{NumberToken};
 
 pub struct NumberNode {
-    location: Location,
     number_token: NumberToken
 }
 
 impl NumberNode {
-    pub fn new(location: Location, number_token: NumberToken) -> NumberNode {
+    pub fn new(number_token: NumberToken) -> NumberNode {
         NumberNode {
-            location,
             number_token
         }
     }

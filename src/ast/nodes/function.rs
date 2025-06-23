@@ -1,9 +1,9 @@
 use crate::ast::{IdentifierNode, Node};
 
 pub struct FunctionNode {
-    identifier_node: IdentifierNode,
-    parameters: Vec<IdentifierNode>,
-    scope: Node,
+    pub identifier_node: IdentifierNode,
+    pub parameters: Vec<IdentifierNode>,
+    pub scope: Node,
 }
 
 impl FunctionNode {

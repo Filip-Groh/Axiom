@@ -1,7 +1,8 @@
+use crate::error::location::Location;
 #[cfg(test)]
 
 use crate::lexer::tests::common::test_lexer;
-use crate::token::{Location, NumberToken, Token};
+use crate::token::{NumberToken, Token};
 
 #[test]
 fn test_lexer_numbers_single_digit() {

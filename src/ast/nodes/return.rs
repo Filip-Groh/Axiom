@@ -1,11 +1,11 @@
 use crate::ast::Node;
 
 pub struct ReturnNode {
-    pub expression: Node,
+    pub expression: Box<Node>,
 }
 
 impl ReturnNode {
-    pub fn new(expression: Node) -> ReturnNode {
+    pub fn new(expression: Box<Node>) -> ReturnNode {
         ReturnNode { 
             expression
         }

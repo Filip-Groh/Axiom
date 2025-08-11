@@ -60,13 +60,19 @@ impl<'code_generator> CodeGenerator<'code_generator> {
                 let expression = self.last_assign.take().unwrap();
                 self.builder.build_return(Some(&expression)).unwrap();
             }
+            Node::Declaration(_, declaration_node) => {
+                self.build(&declaration_node.expression);
+                let expression = self.last_assign.take().unwrap();
+                let i32_type = self.context.i32_type();
+                let pointer = self.builder.build_alloca(i32_type, declaration_node.identifier_node.identifier_token.name.as_str()).unwrap();
+                self.builder.build_store(pointer, expression).unwrap();
+                self.variables.add(declaration_node.identifier_node.identifier_token.name.clone(), pointer);
+            }
             Node::Assignment(_, assignment_node) => {
                 self.build(&assignment_node.expression);
                 let expression = self.last_assign.take().unwrap();
-                let i32_type = self.context.i32_type();
-                let pointer = self.builder.build_alloca(i32_type, assignment_node.identifier_node.identifier_token.name.as_str()).unwrap();
-                self.builder.build_store(pointer, expression).unwrap();
-                self.variables.add(assignment_node.identifier_node.identifier_token.name.clone(), pointer);
+                let pointer = self.variables.get(&assignment_node.identifier_node.identifier_token.name).unwrap();
+                self.builder.build_store(*pointer, expression).unwrap();
             }
             Node::BinaryOperation(_, binary_operation_node) => {
                 self.build(&binary_operation_node.left);

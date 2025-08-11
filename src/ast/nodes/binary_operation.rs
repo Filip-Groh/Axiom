@@ -9,13 +9,13 @@ pub enum BinaryOperationType {
 }
 
 pub struct BinaryOperationNode {
-    pub left: Node,
-    pub right: Node,
+    pub left: Box<Node>,
+    pub right: Box<Node>,
     pub operation_type: BinaryOperationType,
 }
 
 impl BinaryOperationNode {
-    pub fn new(left: Node, right: Node, operation_type: BinaryOperationType) -> BinaryOperationNode {
+    pub fn new(left: Box<Node>, right: Box<Node>, operation_type: BinaryOperationType) -> BinaryOperationNode {
         BinaryOperationNode {
             left,
             right,

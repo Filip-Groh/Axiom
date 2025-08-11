@@ -58,10 +58,22 @@ impl Analyzer {
             Node::Return(location, return_node) => {
                 self.analyze(&return_node.expression);
             }
+            Node::Declaration(location, declaration_node) => {
+                self.analyze(&declaration_node.expression);
+                
+                self.symbol_table.add(declaration_node.identifier_node.identifier_token.name.clone(), ());
+            }
             Node::Assignment(location, assignment_node) => {
                 self.analyze(&assignment_node.expression);
-                
-                self.symbol_table.add(assignment_node.identifier_node.identifier_token.name.clone(), ());
+
+                match self.symbol_table.get(&assignment_node.identifier_node.identifier_token.name) {
+                    Some(_) => {
+
+                    }
+                    None => {
+                        self.errors.push(AxiomError::IdentifierUsedBeforeDeclaration(assignment_node.identifier_node.location.clone(), assignment_node.identifier_node.identifier_token.name.clone()));
+                    }
+                }
             }
             Node::BinaryOperation(location, binary_operation_node) => {
                 self.analyze(&binary_operation_node.left);

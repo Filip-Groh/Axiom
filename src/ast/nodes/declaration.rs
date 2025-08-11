@@ -1,20 +1,20 @@
 use crate::ast::{IdentifierNode, Node};
 
-pub struct AssignmentNode {
+pub struct DeclarationNode {
     pub identifier_node: Box<IdentifierNode>,
     pub expression: Box<Node>,
 }
 
-impl AssignmentNode {
-    pub fn new(identifier_node: Box<IdentifierNode>, expression: Box<Node>) -> AssignmentNode {
-        AssignmentNode {
+impl DeclarationNode {
+    pub fn new(identifier_node: Box<IdentifierNode>, expression: Box<Node>) -> DeclarationNode {
+        DeclarationNode {
             identifier_node,
-            expression
+            expression,
         }
     }
-    
+
     pub fn display(&self, indent: usize) {
         println!("{}- let {} = ", " ".repeat(indent * 4), self.identifier_node.identifier_token.name);
-        self.expression.display(indent + 1);
+        self.expression.display(indent * 4);
     }
 }

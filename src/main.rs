@@ -34,7 +34,8 @@ function main() {
     let a = 5 + 6 * 7
     let b = 1 * (6 / 2)
     let c = 1 + b
-    return c * 2
+    a = 10
+    return (a + c) * 2
 }
     "#.to_string();
 

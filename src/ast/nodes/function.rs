@@ -1,13 +1,13 @@
 use crate::ast::{IdentifierNode, Node};
 
 pub struct FunctionNode {
-    pub identifier_node: IdentifierNode,
-    pub parameters: Vec<IdentifierNode>,
-    pub scope: Node,
+    pub identifier_node: Box<IdentifierNode>,
+    pub parameters: Vec<Box<IdentifierNode>>,
+    pub scope: Box<Node>,
 }
 
 impl FunctionNode {
-    pub fn new(identifier_node: IdentifierNode, parameters: Vec<IdentifierNode>, scope: Node) -> FunctionNode {
+    pub fn new(identifier_node: Box<IdentifierNode>, parameters: Vec<Box<IdentifierNode>>, scope: Box<Node>) -> FunctionNode {
         FunctionNode {
             identifier_node,
             parameters,

@@ -1,11 +1,11 @@
 use crate::ast::Node;
 
 pub struct ScopeNode {
-    pub statements: Vec<Node>
+    pub statements: Vec<Box<Node>>
 }
 
 impl ScopeNode {
-    pub fn new(statements: Vec<Node>) -> ScopeNode {
+    pub fn new(statements: Vec<Box<Node>>) -> ScopeNode {
         ScopeNode {
             statements
         }

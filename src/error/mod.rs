@@ -9,7 +9,7 @@ pub enum AxiomError {
     UnexpectedEOF(Location),
     SyntaxError(Location, String),
     DuplicatedIdentifier(Location, String),
-    IdentifierUsedBeforeDeclaration(Location, String)
+    IdentifierUsedBeforeDeclaration(Location, String),
 }
 
 impl Display for AxiomError {

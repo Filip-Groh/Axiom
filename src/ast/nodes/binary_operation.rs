@@ -11,7 +11,7 @@ pub enum BinaryOperationType {
 pub struct BinaryOperationNode {
     pub left: Node,
     pub right: Node,
-    operation_type: BinaryOperationType,
+    pub operation_type: BinaryOperationType,
 }
 
 impl BinaryOperationNode {

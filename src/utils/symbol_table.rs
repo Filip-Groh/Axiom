@@ -1,11 +1,12 @@
 use std::collections::{HashMap};
+use std::hash::Hash;
 
-pub struct SymbolTable {
-    symbol_tables: Vec<HashMap<String, ()>>
+pub struct SymbolTable<K: Eq + Hash, V> {
+    symbol_tables: Vec<HashMap<K, V>>
 }
 
-impl SymbolTable {
-    pub fn new() -> SymbolTable {
+impl<K: Eq + Hash, V> SymbolTable<K, V> {
+    pub fn new() -> SymbolTable<K, V> {
         SymbolTable {
             symbol_tables: vec![HashMap::new()]
         }
@@ -19,15 +20,15 @@ impl SymbolTable {
         self.symbol_tables.pop();
     }
     
-    pub fn add(&mut self, identifier: String) -> Option<()> {
-        self.symbol_tables.last_mut().unwrap().insert(identifier, ())
+    pub fn add(&mut self, identifier: K, value: V) -> Option<V> {
+        self.symbol_tables.last_mut().unwrap().insert(identifier, value)
     }
     
-    pub fn get(&self, identifier: &String) -> Option<&()> {
+    pub fn get(&self, identifier: &K) -> Option<&V> {
         self.symbol_tables.iter().rev().find_map(|symbol_table| symbol_table.get(identifier))
     }
     
-    pub fn has(&self, identifier: &String) -> bool {
+    pub fn has(&self, identifier: &K) -> bool {
         self.symbol_tables.iter().any(|symbol_table| symbol_table.contains_key(identifier))
     }
 }

@@ -1,7 +1,7 @@
 use crate::ast::Node;
 
 pub struct ScopeNode {
-    pub statements: Vec<Node>,
+    pub statements: Vec<Node>
 }
 
 impl ScopeNode {

@@ -1,7 +1,7 @@
 use crate::token::{NumberToken};
 
 pub struct NumberNode {
-    number_token: NumberToken
+    pub number_token: NumberToken
 }
 
 impl NumberNode {

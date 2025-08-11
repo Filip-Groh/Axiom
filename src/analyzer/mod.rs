@@ -1,11 +1,9 @@
-mod symbol_table;
-
-use crate::analyzer::symbol_table::SymbolTable;
+use crate::utils::symbol_table::SymbolTable;
 use crate::ast::Node;
 use crate::error::AxiomError;
 
 pub struct Analyzer {
-    symbol_table: SymbolTable,
+    symbol_table: SymbolTable<String, ()>,
     errors: Vec<AxiomError>,
 }
 
@@ -39,7 +37,7 @@ impl Analyzer {
                     if already_exist {
                         self.errors.push(AxiomError::DuplicatedIdentifier(parameter.location.clone(), parameter.identifier_token.name.clone()));
                     } else {
-                        self.symbol_table.add(parameter.identifier_token.name.clone());
+                        self.symbol_table.add(parameter.identifier_token.name.clone(), ());
                     }
                 }
                 
@@ -57,10 +55,17 @@ impl Analyzer {
                 
                 self.symbol_table.pop();
             }
+            Node::Return(location, return_node) => {
+                self.analyze(&return_node.expression);
+            }
             Node::Assignment(location, assignment_node) => {
                 self.analyze(&assignment_node.expression);
                 
-                self.symbol_table.add(assignment_node.identifier_node.identifier_token.name.clone());
+                self.symbol_table.add(assignment_node.identifier_node.identifier_token.name.clone(), ());
+            }
+            Node::BinaryOperation(location, binary_operation_node) => {
+                self.analyze(&binary_operation_node.left);
+                self.analyze(&binary_operation_node.right);
             }
             Node::Identifier(location, identifier_node) => {
                 match self.symbol_table.get(&identifier_node.identifier_token.name) {
@@ -71,13 +76,6 @@ impl Analyzer {
                         self.errors.push(AxiomError::IdentifierUsedBeforeDeclaration(identifier_node.location.clone(), identifier_node.identifier_token.name.clone()));
                     }
                 }
-            }
-            Node::BinaryOperation(location, binary_operation_node) => {
-                self.analyze(&binary_operation_node.left);
-                self.analyze(&binary_operation_node.right);
-            }
-            Node::Return(location, return_node) => {
-                self.analyze(&return_node.expression);
             }
             Node::Number(location, number_node) => {}
         }

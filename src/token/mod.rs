@@ -10,6 +10,7 @@ pub enum Token {
     Keyword(Location, KeywordToken),
     Operator(Location, OperatorToken),
     Parentheses(Location, ParenthesesToken),
+    Punctuation(Location, PunctuationToken),
     Unknown(Location, char),
 }
 
@@ -21,6 +22,7 @@ impl Token {
             Token::Keyword(location, _) => location,
             Token::Operator(location, _) => location,
             Token::Parentheses(location, _) => location,
+            Token::Punctuation(location, _) => location,
             Token::Unknown(location, _) => location
         }
     }

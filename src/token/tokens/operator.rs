@@ -1,11 +1,11 @@
 #[derive(Debug, PartialEq, Clone)]
 pub enum OperatorCategory {
     Arithmetic(OperatorArithmeticType),
-    // Comparison(),
-    // Logical(),
     // Bitwise(),
+    Comparison(OperatorComparisonType),
+    // Logical(),
     Assignment(OperatorAssignmentType),
-    // Unary(),
+    Unary(OperatorUnaryType),
     // Ternary(),
 }
 
@@ -19,7 +19,26 @@ pub enum OperatorArithmeticType {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum OperatorAssignmentType {
-    Assignment
+    Assignment,
+    AdditionAssignment,
+    SubtractionAssignment,
+    MultiplicationAssignment,
+    DivisionAssignment
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum OperatorComparisonType {
+    Equal,
+    NotEqual,
+    GreaterThan,
+    GreaterThanOrEqual,
+    LessThan,
+    LessThanOrEqual
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum OperatorUnaryType {
+    Not
 }
 
 #[derive(Debug, PartialEq, Clone)]

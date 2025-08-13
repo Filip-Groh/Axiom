@@ -1,7 +1,7 @@
-use crate::ast::{AssignmentNode, BinaryOperationNode, BinaryOperationType, DeclarationNode, FileNode, FunctionNode, IdentifierNode, Node, NumberNode, ReturnNode, ScopeNode};
-use crate::error::AxiomError;
+use crate::ast::{AssignmentNode, BinaryOperationNode, BinaryOperationType, CallNode, DeclarationNode, FileNode, FunctionNode, IdentifierNode, Node, NumberNode, ParameterNode, ReturnNode, ScopeNode};
+use crate::error::{AxiomError};
 use crate::error::location::Location;
-use crate::token::{KeywordType, OperatorArithmeticType, OperatorAssignmentType, OperatorCategory, ParenthesesState, ParenthesesType, Token};
+use crate::token::{KeywordType, OperatorArithmeticType, OperatorAssignmentType, OperatorCategory, OperatorComparisonType, ParenthesesState, ParenthesesType, PunctuationType, Token};
 
 pub struct Parser {
     index: usize,
@@ -61,49 +61,90 @@ impl Parser {
             match token {
                 Token::Keyword(keyword_location, keyword_token) if matches!(keyword_token.keyword_type, KeywordType::Function) => {
                     self.step();
+
                     let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
 
                     match token {
                         Token::Identifier(identifier_location, identifier_token) => {
                             let identifier_node = IdentifierNode::new(identifier_location.clone(), identifier_token);
+
                             self.step();
+
                             let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
 
                             match token {
                                 Token::Parentheses(opening_parentheses_location, parentheses_token) if matches!(parentheses_token.parentheses_type, ParenthesesType::Round(ParenthesesState::Opening)) => {
                                     self.step();
+
                                     let mut parameters = vec![];
                                     let mut locations = vec![keyword_location, identifier_location, opening_parentheses_location];
 
+                                    let mut first_loop = true;
                                     loop {
                                         let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
 
-                                        if let Token::Parentheses(closing_parentheses_location, parentheses_token) = token {
+                                        if let Token::Parentheses(closing_parentheses_location, parentheses_token) = &token {
                                             if matches!(parentheses_token.parentheses_type, ParenthesesType::Round(ParenthesesState::Closing)) {
-                                                locations.push(closing_parentheses_location);
+                                                locations.push(closing_parentheses_location.clone());
+
                                                 self.step();
+
                                                 break
                                             }
                                         }
 
-                                        let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
-
-                                        match token {
-                                            Token::Identifier(identifier_location, identifier_token) => {
-                                                self.step();
-                                                locations.push(identifier_location.clone());
-                                                parameters.push(Box::from(IdentifierNode::new(identifier_location, identifier_token)));
+                                        if !first_loop {
+                                            if !matches!(&token, Token::Punctuation(_, punctuation_token) if matches!(punctuation_token.punctuation_type, PunctuationType::Comma)) {
+                                                return Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected ',' or ')'".into()))
                                             }
-                                            _ => return Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected identifier".into()))
+
+                                            locations.push(token.location().clone());
+
+                                            self.step()
+                                        }
+
+                                        let parameter = self.parameter()?;
+                                        let parameter_location = parameter.location.clone();
+
+                                        parameters.push(parameter);
+                                        locations.push(parameter_location);
+
+                                        first_loop = false;
+                                    }
+
+                                    let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
+
+                                    let mut output_type = None;
+                                    if let Token::Punctuation(punctuation_location, punctuation_token) = &token {
+                                        if matches!(punctuation_token.punctuation_type, PunctuationType::Colon) {
+                                            self.step();
+
+                                            let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
+
+                                            if let Token::Identifier(type_identifier_location, type_identifier_token) = token {
+                                                let type_identifier_node = IdentifierNode::new(type_identifier_location.clone(), type_identifier_token);
+
+                                                self.step();
+
+                                                locations.push(punctuation_location.clone());
+                                                locations.push(type_identifier_location.clone());
+
+                                                output_type = Some(Box::from(type_identifier_node));
+                                            } else {
+                                                return Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected identifier".into()))
+                                            }
                                         }
                                     }
 
                                     let scope = self.scope()?;
-                                    let scope_location = scope.location();
+                                    let scope_location = scope.location.clone();
                                     locations.push(scope_location.clone());
+
                                     let location = Location::from_locations(locations);
+                                    let function_node = FunctionNode::new(location.clone(), Box::from(identifier_node), parameters, output_type, scope);
+
                                     file_locations.push(location.clone());
-                                    functions.push(Box::from(Node::Function(location, Box::from(FunctionNode::new(Box::from(identifier_node), parameters, scope)))));
+                                    functions.push(Box::from(function_node));
                                 }
                                 _ => return Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected '('".into()))
                             }
@@ -115,15 +156,57 @@ impl Parser {
             }
         }
 
-        Ok(Box::from(Node::File(Location::from_locations(file_locations), FileNode::new(functions))))
+        let location = Location::from_locations(file_locations);
+        let file_node = FileNode::new(location, functions);
+        let node = Node::File(file_node);
+
+        Ok(Box::from(node))
+    }
+    
+    fn parameter(&mut self) -> Result<Box<ParameterNode>, AxiomError> {
+        let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
+
+        if let Token::Identifier(identifier_location, identifier_token) = token {
+            let identifier_node = IdentifierNode::new(identifier_location.clone(), identifier_token);
+
+            self.step();
+
+            let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
+
+            if !matches!(&token, Token::Punctuation(_, punctuation_token) if matches!(punctuation_token.punctuation_type, PunctuationType::Colon)) {
+                return Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected ':'".into()))
+            }
+
+            let colon_location = token.location().clone();
+
+            self.step();
+
+            let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
+
+            if let Token::Identifier(type_identifier_location, type_identifier_token) = token {
+                let type_identifier_node = IdentifierNode::new(type_identifier_location.clone(), type_identifier_token);
+
+                self.step();
+
+                let location = Location::from_locations(vec![identifier_location, colon_location, type_identifier_location]);
+                let parameter_node = ParameterNode::new(location, Box::from(identifier_node), Box::from(type_identifier_node));
+
+                Ok(Box::from(parameter_node))
+            } else {
+                Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected identifier".into()))
+            }
+        } else {
+            Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected identifier".into()))
+        }
     }
 
-    fn scope(&mut self) -> Result<Box<Node>, AxiomError> {
+    fn scope(&mut self) -> Result<Box<ScopeNode>, AxiomError> {
         let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
         
         match token {
             Token::Parentheses(opening_parentheses_location, parentheses_token) if matches!(parentheses_token.parentheses_type, ParenthesesType::Curly(ParenthesesState::Opening)) => {
                 self.step();
+
                 let mut statements = vec![];
                 let mut locations = vec![opening_parentheses_location];
 
@@ -133,17 +216,23 @@ impl Parser {
                     if let Token::Parentheses(closing_parentheses_location, parentheses_token) = token {
                         if matches!(parentheses_token.parentheses_type, ParenthesesType::Curly(ParenthesesState::Closing)) {
                             locations.push(closing_parentheses_location);
+
                             self.step();
+
                             break
                         }
                     }
 
                     let statement = self.statement()?;
+
                     locations.push(statement.location().clone());
                     statements.push(statement);
                 }
 
-                Ok(Box::from(Node::Scope(Location::from_locations(locations), ScopeNode::new(statements))))
+                let location = Location::from_locations(locations);
+                let scope_node = ScopeNode::new(location, statements);
+
+                Ok(Box::from(scope_node))
             }
             _ => Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected '{'".into()))
         }
@@ -155,21 +244,31 @@ impl Parser {
         match token {
             Token::Keyword(keyword_location, keyword_token) if matches!(keyword_token.keyword_type, KeywordType::Let) => {
                 self.step();
+
                 let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
 
                 match token {
                     Token::Identifier(identifier_location, identifier_token) => {
                         let identifier_node = IdentifierNode::new(identifier_location.clone(), identifier_token);
+
                         self.step();
+
                         let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
+
                         match token {
                             Token::Operator(operator_location, operator_token) if matches!(operator_token.operator_type, OperatorCategory::Assignment(OperatorAssignmentType::Assignment)) => {
                                 self.step();
+
                                 let expression = self.expression()?;
-                                let expression_location = expression.location();
-                                Ok(Box::from(Node::Declaration(Location::from_locations(vec![keyword_location, identifier_location, operator_location, expression_location.clone()]), Box::from(DeclarationNode::new(Box::from(identifier_node), expression)))))
+                                let expression_location = expression.location().clone();
+
+                                let location = Location::from_locations(vec![keyword_location, identifier_location, operator_location, expression_location.clone()]);
+                                let declaration_node = DeclarationNode::new(location, Box::from(identifier_node), expression);
+                                let node = Node::Declaration(declaration_node);
+
+                                Ok(Box::from(node))
                             }
-                            _ => return Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected '='".into()))
+                            _ => Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected '='".into()))
                         }
                     }
                     _ => Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected identifier".into()))
@@ -177,41 +276,104 @@ impl Parser {
             }
             Token::Keyword(keyword_location, keyword_token) if matches!(keyword_token.keyword_type, KeywordType::Return) => {
                 self.step();
+
                 let expression = self.expression()?;
-                let expression_location = expression.location();
-                Ok(Box::from(Node::Return(Location::from_locations(vec![keyword_location, expression_location.clone()]), Box::from(ReturnNode::new(expression)))))
+                let expression_location = expression.location().clone();
+
+                let location = Location::from_locations(vec![keyword_location, expression_location]);
+                let return_node = ReturnNode::new(location, expression);
+                let node = Node::Return(return_node);
+
+                Ok(Box::from(node))
             }
             Token::Identifier(identifier_location, identifier_token) => {
-                let identifier_node = IdentifierNode::new(identifier_location.clone(), identifier_token);
+                let identifier_node = IdentifierNode::new(identifier_location, identifier_token);
+
                 self.step();
-                let assignment = self.assignment(identifier_node, identifier_location)?;
+
+                let assignment = self.assignment(Box::from(identifier_node))?;
+
                 Ok(assignment)
             }
             _ => Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Unexpected token".into()))
         }
     }
-    
-    fn assignment(&mut self, identifier_node: IdentifierNode, identifier_location: Location) -> Result<Box<Node>, AxiomError> {
+
+    fn assignment(&mut self, identifier_node: Box<IdentifierNode>) -> Result<Box<Node>, AxiomError> {
         let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
-        
+
         match token {
             Token::Operator(operator_location, operator_token) if matches!(operator_token.operator_type, OperatorCategory::Assignment(OperatorAssignmentType::Assignment)) => {
                 self.step();
+
                 let expression = self.expression()?;
-                let expression_location = expression.location();
-                Ok(Box::from(Node::Assignment(Location::from_locations(vec![identifier_location, operator_location, expression_location.clone()]), Box::from(AssignmentNode::new(Box::from(identifier_node), expression)))))
+                let expression_location = expression.location().clone();
+
+                let location = Location::from_locations(vec![identifier_node.location.clone(), operator_location, expression_location.clone()]);
+                let assignment_node = AssignmentNode::new(location, Box::from(identifier_node), expression);
+                let node = Node::Assignment(assignment_node);
+
+                Ok(Box::from(node))
             }
-            _ => return Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected '='".into()))
+            Token::Operator(operator_location, operator_token) if matches!(operator_token.operator_type, OperatorCategory::Assignment(OperatorAssignmentType::AdditionAssignment)) => {
+                Ok(self.assignment_operation(identifier_node, operator_location, BinaryOperationType::Addition, |_self| {_self.expression()})?)
+            }
+            Token::Operator(operator_location, operator_token) if matches!(operator_token.operator_type, OperatorCategory::Assignment(OperatorAssignmentType::SubtractionAssignment)) => {
+                Ok(self.assignment_operation(identifier_node, operator_location, BinaryOperationType::Subtraction, |_self| {_self.expression()})?)
+            }
+            Token::Operator(operator_location, operator_token) if matches!(operator_token.operator_type, OperatorCategory::Assignment(OperatorAssignmentType::MultiplicationAssignment)) => {
+                Ok(self.assignment_operation(identifier_node, operator_location, BinaryOperationType::Multiplication, |_self| {_self.expression()})?)
+            }
+            Token::Operator(operator_location, operator_token) if matches!(operator_token.operator_type, OperatorCategory::Assignment(OperatorAssignmentType::DivisionAssignment)) => {
+                Ok(self.assignment_operation(identifier_node, operator_location, BinaryOperationType::Division, |_self| {_self.expression()})?)
+            }
+            _ => Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected '='".into()))
         }
     }
 
     fn expression(&mut self) -> Result<Box<Node>, AxiomError> {
-        self.additive()
+        self.equality()
+    }
+
+    fn equality(&mut self) -> Result<Box<Node>, AxiomError> {
+        let mut left = self.additive()?;
+
+        loop {
+            let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
+
+            match token {
+                Token::Operator(operator_location, operator_token) => {
+                    match operator_token.operator_type {
+                        OperatorCategory::Comparison(OperatorComparisonType::Equal) => {
+                            left = self.binary_operation(left, operator_location, BinaryOperationType::Equal, |_self| {_self.additive()})?;
+                        }
+                        OperatorCategory::Comparison(OperatorComparisonType::NotEqual) => {
+                            left = self.binary_operation(left, operator_location, BinaryOperationType::NotEqual, |_self| {_self.additive()})?;
+                        }
+                        OperatorCategory::Comparison(OperatorComparisonType::GreaterThan) => {
+                            left = self.binary_operation(left, operator_location, BinaryOperationType::GreaterThan, |_self| {_self.additive()})?;
+                        }
+                        OperatorCategory::Comparison(OperatorComparisonType::GreaterThanOrEqual) => {
+                            left = self.binary_operation(left, operator_location, BinaryOperationType::GreaterThanOrEqual, |_self| {_self.additive()})?;
+                        }
+                        OperatorCategory::Comparison(OperatorComparisonType::LessThan) => {
+                            left = self.binary_operation(left, operator_location, BinaryOperationType::LessThan, |_self| {_self.additive()})?;
+                        }
+                        OperatorCategory::Comparison(OperatorComparisonType::LessThanOrEqual) => {
+                            left = self.binary_operation(left, operator_location, BinaryOperationType::LessThanOrEqual, |_self| {_self.additive()})?;
+                        }
+                        _ => break
+                    }
+                }
+                _ => break
+            }
+        }
+
+        Ok(left)
     }
     
     fn additive(&mut self) -> Result<Box<Node>, AxiomError> {
         let mut left = self.multiplicative()?;
-        let left_location = &left.location().clone();
                 
         loop {
             let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
@@ -220,16 +382,10 @@ impl Parser {
                 Token::Operator(operator_location, operator_token) => {
                     match operator_token.operator_type {
                         OperatorCategory::Arithmetic(OperatorArithmeticType::Addition) => {
-                            self.step();
-                            let right = self.multiplicative()?;
-                            let right_location = right.location();
-                            left = Box::from(Node::BinaryOperation(Location::from_locations(vec![left_location.clone(), operator_location, right_location.clone()]), Box::from(BinaryOperationNode::new(left, right, BinaryOperationType::Addition()))))
+                            left = self.binary_operation(left, operator_location, BinaryOperationType::Addition, |_self| {_self.multiplicative()})?;
                         }
                         OperatorCategory::Arithmetic(OperatorArithmeticType::Subtraction) => {
-                            self.step();
-                            let right = self.multiplicative()?;
-                            let right_location = right.location();
-                            left = Box::from(Node::BinaryOperation(Location::from_locations(vec![left_location.clone(), operator_location, right_location.clone()]), Box::from(BinaryOperationNode::new(left, right, BinaryOperationType::Subtraction()))))
+                            left = self.binary_operation(left, operator_location, BinaryOperationType::Subtraction, |_self| {_self.multiplicative()})?;
                         }
                         _ => break
                     }
@@ -243,7 +399,6 @@ impl Parser {
     
     fn multiplicative(&mut self) -> Result<Box<Node>, AxiomError> {
         let mut left = self.primary()?;
-        let left_location = &left.location().clone();
         
         loop {
             let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
@@ -252,16 +407,10 @@ impl Parser {
                 Token::Operator(operator_location, operator_token) => {
                     match operator_token.operator_type {
                         OperatorCategory::Arithmetic(OperatorArithmeticType::Multiplication) => {
-                            self.step();
-                            let right = self.primary()?;
-                            let right_location = right.location();
-                            left = Box::from(Node::BinaryOperation(Location::from_locations(vec![left_location.clone(), operator_location, right_location.clone()]), Box::from(BinaryOperationNode::new(left, right, BinaryOperationType::Multiplication()))))
+                            left = self.binary_operation(left, operator_location, BinaryOperationType::Multiplication, |_self| {_self.primary()})?;
                         }
                         OperatorCategory::Arithmetic(OperatorArithmeticType::Division) => {
-                            self.step();
-                            let right = self.primary()?;
-                            let right_location = right.location();
-                            left = Box::from(Node::BinaryOperation(Location::from_locations(vec![left_location.clone(), operator_location, right_location.clone()]), Box::from(BinaryOperationNode::new(left, right, BinaryOperationType::Division()))))
+                            left = self.binary_operation(left, operator_location, BinaryOperationType::Division, |_self| {_self.primary()})?;
                         }
                         _ => break
                     }
@@ -279,21 +428,76 @@ impl Parser {
         match token {
             Token::Number(number_location, number_token) => {
                 self.step();
-                Ok(Box::from(Node::Number(number_location, NumberNode::new(number_token))))
+
+                let number_node = NumberNode::new(number_location, number_token);
+                let node = Node::Number(number_node);
+
+                Ok(Box::from(node))
             }
             Token::Identifier(identifier_location, identifier_token) => {
                 self.step();
-                Ok(Box::from(Node::Identifier(identifier_location.clone(), IdentifierNode::new(identifier_location, identifier_token))))
+
+                let identifier_node = IdentifierNode::new(identifier_location.clone(), identifier_token);
+
+                if let Some(token) = self.current_token.clone() && matches!(&token, Token::Parentheses(_, parentheses_token) if matches!(parentheses_token.parentheses_type, ParenthesesType::Round(ParenthesesState::Opening))) {
+                    self.step();
+
+                    let mut parameters = vec![];
+                    let mut parameter_locations = vec![identifier_location, token.location().clone(), token.location().clone()];
+
+                    let mut first_loop = true;
+                    loop {
+                        let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
+
+                        if let Token::Parentheses(parentheses_location, parentheses_token) = &token && matches!(parentheses_token.parentheses_type, ParenthesesType::Round(ParenthesesState::Closing)) {
+                            parameter_locations.push(parentheses_location.clone());
+
+                            self.step();
+
+                            break
+                        }
+
+                        if !first_loop {
+                            if !matches!(&token, Token::Punctuation(_, punctuation_token) if matches!(punctuation_token.punctuation_type, PunctuationType::Comma)) {
+                                return Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected ',' or ')'".into()))
+                            }
+
+                            parameter_locations.push(token.location().clone());
+
+                            self.step()
+                        }
+
+                        let expression = self.expression()?;
+                        let expression_location = expression.location().clone();
+
+                        parameters.push(expression);
+                        parameter_locations.push(expression_location);
+
+                        first_loop = false;
+                    }
+
+                    let location = Location::from_locations(parameter_locations);
+                    let call_node = CallNode::new(location, Box::from(identifier_node), parameters);
+                    let node = Node::Call(call_node);
+
+                    return Ok(Box::from(node))
+                }
+
+                let node = Node::Identifier(identifier_node);
+
+                Ok(Box::from(node))
             }
-            Token::Parentheses(opening_parentheses_location, parentheses_token) if matches!(parentheses_token.parentheses_type, ParenthesesType::Round(ParenthesesState::Opening)) => {
+            Token::Parentheses(_, parentheses_token) if matches!(parentheses_token.parentheses_type, ParenthesesType::Round(ParenthesesState::Opening)) => {
                 self.step();
+
                 let expression = self.expression()?;
 
                 let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_location_from_last_token_location()))?;
 
                 match token {
-                    Token::Parentheses(closing_parentheses_location, parentheses_token) if matches!(parentheses_token.parentheses_type, ParenthesesType::Round(ParenthesesState::Closing)) => {
+                    Token::Parentheses(_, parentheses_token) if matches!(parentheses_token.parentheses_type, ParenthesesType::Round(ParenthesesState::Closing)) => {
                         self.step();
+
                         Ok(expression)
                     }
                     _ => Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected ')'".into()))
@@ -301,5 +505,33 @@ impl Parser {
             }
             _ => Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Unexpected token".into()))
         }
+    }
+
+    fn binary_operation<F>(&mut self, left: Box<Node>, operator_location: Location, binary_operation_type: BinaryOperationType, right_fn: F) -> Result<Box<Node>, AxiomError> where F: Fn(&mut Self) -> Result<Box<Node>, AxiomError> {
+        self.step();
+        
+        let right = right_fn(self)?;
+        let right_location = right.location().clone();
+
+        let location = Location::from_locations(vec![left.location().clone(), operator_location, right_location]);
+        let binary_operation_node = BinaryOperationNode::new(location, left, right, binary_operation_type);
+        let node = Node::BinaryOperation(binary_operation_node);
+
+        Ok(Box::from(node))
+    }
+
+    fn assignment_operation<F>(&mut self, identifier_node: Box<IdentifierNode>, operator_location: Location, binary_operation_type: BinaryOperationType, right_fn: F) -> Result<Box<Node>, AxiomError> where F: Fn(&mut Self) -> Result<Box<Node>, AxiomError> {
+        self.step();
+
+        let right = right_fn(self)?;
+        let right_location = right.location().clone();
+
+        let location = Location::from_locations(vec![identifier_node.location.clone(), operator_location.clone(), right_location.clone()]);
+        let expression_node = BinaryOperationNode::new(location.clone(), Box::from(Node::Identifier(*identifier_node.clone())), right, binary_operation_type);
+
+        let assignment_node = AssignmentNode::new(location, identifier_node, Box::from(Node::BinaryOperation(expression_node)));
+        let node = Node::Assignment(assignment_node);
+
+        Ok(Box::from(node))
     }
 }

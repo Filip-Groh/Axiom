@@ -7,6 +7,8 @@ mod function;
 mod file;
 mod r#return;
 mod declaration;
+mod call;
+mod parameter;
 
 pub use number::*;
 pub use binary_operation::*;
@@ -17,3 +19,5 @@ pub use function::*;
 pub use file::*;
 pub use r#return::*;
 pub use declaration::*;
+pub use call::*;
+pub use parameter::*;

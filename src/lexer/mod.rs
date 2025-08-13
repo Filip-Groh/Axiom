@@ -2,7 +2,7 @@ mod tests;
 
 use std::error::Error;
 use crate::error::location::Location;
-use crate::token::{NumberToken, Token, IdentifierToken, OperatorToken, OperatorCategory, OperatorArithmeticType, OperatorAssignmentType, ParenthesesToken, ParenthesesType, ParenthesesState, KeywordToken};
+use crate::token::{NumberToken, Token, IdentifierToken, OperatorToken, OperatorCategory, OperatorArithmeticType, OperatorAssignmentType, ParenthesesToken, ParenthesesType, ParenthesesState, KeywordToken, OperatorComparisonType, OperatorUnaryType, PunctuationToken, PunctuationType};
 
 pub struct Lexer{
     chars: Vec<char>,
@@ -56,6 +56,7 @@ impl Lexer {
                 char if char.is_alphabetic() => self.parse_identifier(),
                 char if Lexer::is_operator(char) => self.parse_operator(),
                 char if Lexer::is_parentheses(char) => self.parse_parentheses(),
+                char if Lexer::is_punctuation(char) => self.parse_punctuation(),
                 _ => {
                     let location = Location::new(self.index, self.index);
                     self.tokens.push(Token::Unknown(location, current_char));
@@ -117,30 +118,103 @@ impl Lexer {
     
     fn is_operator(current_char: char) -> bool {
         match current_char {
-            '+' | '-' | '*' | '/' | '=' => true,
+            '+' | '-' | '*' | '/' | '=' | '!' | '>' | '<' => true,
             _ => false
         }
     }
 
     fn parse_operator(&mut self) {
         let current_operator = self.current_char.unwrap();
-        let location = Location::new(self.index, self.index);
+        let start_location = self.index;
         
         match current_operator {
             '+' => {
-                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorCategory::Arithmetic(OperatorArithmeticType::Addition))))
+                let mut token_type = OperatorCategory::Arithmetic(OperatorArithmeticType::Addition);
+                
+                if let Some(char) = self.peek() && char == '=' {
+                    self.step();
+                    token_type = OperatorCategory::Assignment(OperatorAssignmentType::AdditionAssignment);
+                }
+                
+                let location = Location::new(start_location, self.index);
+                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)));
             }
             '-' => {
-                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorCategory::Arithmetic(OperatorArithmeticType::Subtraction))))
+                let mut token_type = OperatorCategory::Arithmetic(OperatorArithmeticType::Subtraction);
+
+                if let Some(char) = self.peek() && char == '=' {
+                    self.step();
+                    token_type = OperatorCategory::Assignment(OperatorAssignmentType::SubtractionAssignment);
+                }
+
+                let location = Location::new(start_location, self.index);
+                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)));
             }
             '*' => {
-                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorCategory::Arithmetic(OperatorArithmeticType::Multiplication))))
+                let mut token_type = OperatorCategory::Arithmetic(OperatorArithmeticType::Multiplication);
+
+                if let Some(char) = self.peek() && char == '=' {
+                    self.step();
+                    token_type = OperatorCategory::Assignment(OperatorAssignmentType::MultiplicationAssignment);
+                }
+
+                let location = Location::new(start_location, self.index);
+                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)));
             }
             '/' => {
-                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorCategory::Arithmetic(OperatorArithmeticType::Division))))
+                let mut token_type = OperatorCategory::Arithmetic(OperatorArithmeticType::Division);
+
+                if let Some(char) = self.peek() && char == '=' {
+                    self.step();
+                    token_type = OperatorCategory::Assignment(OperatorAssignmentType::DivisionAssignment);
+                }
+
+                let location = Location::new(start_location, self.index);
+                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)));
             }
             '=' => {
-                self.tokens.push(Token::Operator(location, OperatorToken::new(OperatorCategory::Assignment(OperatorAssignmentType::Assignment))))
+                let mut token_type = OperatorCategory::Assignment(OperatorAssignmentType::Assignment);
+                
+                if let Some(char) = self.peek() && char == '=' {
+                    self.step();
+                    token_type = OperatorCategory::Comparison(OperatorComparisonType::Equal);
+                }
+                
+                let location = Location::new(start_location, self.index);
+                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)))
+            }
+            '!' => {
+                let mut token_type = OperatorCategory::Unary(OperatorUnaryType::Not);
+
+                if let Some(char) = self.peek() && char == '=' {
+                    self.step();
+                    token_type = OperatorCategory::Comparison(OperatorComparisonType::NotEqual);
+                }
+
+                let location = Location::new(start_location, self.index);
+                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)))
+            }
+            '>' => {
+                let mut token_type = OperatorCategory::Comparison(OperatorComparisonType::GreaterThan);
+
+                if let Some(char) = self.peek() && char == '=' {
+                    self.step();
+                    token_type = OperatorCategory::Comparison(OperatorComparisonType::GreaterThanOrEqual);
+                }
+
+                let location = Location::new(start_location, self.index);
+                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)))
+            }
+            '<' => {
+                let mut token_type = OperatorCategory::Comparison(OperatorComparisonType::LessThan);
+
+                if let Some(char) = self.peek() && char == '=' {
+                    self.step();
+                    token_type = OperatorCategory::Comparison(OperatorComparisonType::LessThanOrEqual);
+                }
+
+                let location = Location::new(start_location, self.index);
+                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)))
             }
             _ => ()
         }
@@ -169,6 +243,28 @@ impl Lexer {
             }
             '}' => {
                 self.tokens.push(Token::Parentheses(location, ParenthesesToken::new(ParenthesesType::Curly(ParenthesesState::Closing))))
+            }
+            _ => ()
+        }
+    }
+    
+    fn is_punctuation(current_char: char) -> bool {
+        match current_char {
+            ',' | ':' => true,
+            _ => false
+        }
+    }
+    
+    fn parse_punctuation(&mut self) {
+        let current_punctuation = self.current_char.unwrap();
+        let location = Location::new(self.index, self.index);
+        
+        match current_punctuation {
+            ',' => {
+                self.tokens.push(Token::Punctuation(location, PunctuationToken::new(PunctuationType::Comma)))
+            }
+            ':' => {
+                self.tokens.push(Token::Punctuation(location, PunctuationToken::new(PunctuationType::Colon)))
             }
             _ => ()
         }

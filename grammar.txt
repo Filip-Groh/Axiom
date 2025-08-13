@@ -1,6 +1,9 @@
 Syntax:
 - File 
-    = (KEYWORD["FUNCTION"] IDENTIFIER PARENTHESES["("] IDENTIFIER* PARENTHESES[")"] Scope)*
+    = (KEYWORD["FUNCTION"] IDENTIFIER PARENTHESES["("] ((Parameter PUNCTUATION[","])* Parameter)? PARENTHESES[")"] (PUNCTUATION[":"] IDENTIFIER)? Scope)*
+    
+- Parameter
+    = IDENTIFIER PUNCTUATION[":"] IDENTIFIER
     
 - Scope 
     = PARENTHESES["{"] Statement* PARENTHESES["}"]
@@ -12,9 +15,16 @@ Syntax:
 
 - Assignment
     = OPERATOR["="] Expression
+    / OPERATOR["+="] Expression
+    / OPERATOR["-="] Expression
+    / OPERATOR["*="] Expression
+    / OPERATOR["/="] Expression
     
 - Expression 
-    = Additive
+    = Equality
+
+- Equality
+   = Additive ((OPERATOR["=="] / OPERATOR["!="] / OPERATOR[">"] / OPERATOR[">="] / OPERATOR["<"] / OPERATOR["<="]) Additive)*
     
 - Additive 
     = Multiplicative ((OPERATOR["+"] / OPERATOR["-"]) Multiplicative)*
@@ -26,10 +36,12 @@ Syntax:
     = NUMBER 
     / IDENTIFIER 
     / PARENTHESES["("] Expression PARENTHESES[")"]
+    / IDENTIFIER PARENTHESES["("] ((Expression PUNCTUATION[","])* Expression)? PARENTHESES[")"]
 
 Tokens:
 - NUMBER
 - IDENTIFIER
 - KEYWORD["LET", "FUNCTION", "RETURN"]
-- OPERATOR["+", "-", "*", "/", "="]
+- OPERATOR["+", "-", "*", "/", "=", "+=", "-=", "*=", "/=", "==", "!=", ">", ">=", "<", "<="]
 - PARENTHESES["(", ")", "{", "}"]
+- PUNCTUATION[",", ":"]

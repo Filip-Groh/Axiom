@@ -1,0 +1,1 @@
+pub type TextDocumentSyncType = i32;

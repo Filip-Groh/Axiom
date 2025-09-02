@@ -14,6 +14,22 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "commands": [
+      {
+        "command": "axiom-language-extension.runScript",
+        "title": "Run Axiom",
+        "icon": "$(play)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "axiom-language-extension.runScript",
+          "group": "navigation",
+          "when": "resourceLangId == axiom"
+        }
+      ]
+    },
     "languages": [
       {
         "id": "axiom",
@@ -26,12 +42,11 @@
         ]
       }
     ],
-    "commands": [
-      {
-        "command": "axiom-language-extension.helloWorld",
-        "title": "Hello World"
-      }
-    ]
+    "grammars": [{
+      "language": "axiom",
+      "scopeName": "source.axiom",
+      "path": "./src/syntax/axiom.tmGrammar.json"
+    }]
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

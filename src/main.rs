@@ -10,6 +10,8 @@ mod datatype;
 mod lsp;
 
 use std::error::Error;
+use std::fs;
+use std::path::{PathBuf};
 use clap::{Args, Command, Parser as ArgsParser, Subcommand};
 use inkwell::context::Context;
 use inkwell::OptimizationLevel;
@@ -18,7 +20,6 @@ use crate::analyzer::Analyzer;
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::lexer::Lexer;
-use crate::lsp::LSP;
 use crate::parser::Parser;
 use crate::utils::SymbolTable;
 
@@ -37,7 +38,7 @@ enum Commands {
 
 #[derive(Args, Debug)]
 struct RunArgs {
-
+    path: PathBuf
 }
 
 #[derive(Args, Debug)]
@@ -54,58 +55,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     let options = Options::parse();
 
     match options.command {
-        Commands::Run(_) => {}
+        Commands::Run(run_args) => {
+            run(run_args.path)?;
+        }
         Commands::Build(_) => {}
         Commands::Lsp(_) => {
-            let mut lsp = LSP::new();
-            lsp.start()
+            lsp::start()?;
         }
     }
-
-//     let input = r#"
-// function add(a: i32, b: i32): i32 {
-//     return a + b
-// }
-//
-// function main(): bool {
-//     let a = 5
-//     let b = 1
-//     let c = add(a, b * 5)
-//     c += 10
-//     let d = add(1, 1)
-//     return c / (d * 2) == 5
-// }
-//     "#.to_string();
-//
-//     let tokens = Lexer::new(&input).parse()?;
-//     println!("Tokens: \n{:?}", tokens);
-//
-//     let mut ast = Parser::new(tokens).parse()?;
-//     println!("AST: ");
-//     ast.display(0);
-//
-//     let mut symbol_table = SymbolTable::new();
-//     let mut errors = vec![];
-//
-//     symbol_table.add("i32".to_string(), DataType::Type(Box::from(DataType::I32)));
-//     symbol_table.add("bool".to_string(), DataType::Type(Box::from(DataType::Bool)));
-//     // Add build-in functions here!
-//
-//     ast.analyze(&mut symbol_table, &mut errors);
-//     errors.iter().for_each(|err| println!("{}", err));
-//
-//     let context = Context::create();
-//     let mut codegen = CodeGenerator::new(&context);
-//     ast.build(&mut codegen);
-//     println!("LLVM IR Code: \n{}", codegen.to_string());
-//
-//     Target::initialize_native(&InitializationConfig::default())?;
-//     let execution_engine = codegen.module.create_jit_execution_engine(OptimizationLevel::None)?;
-//     let add_func = unsafe {
-//         execution_engine.get_function::<unsafe extern "C" fn() -> i32>("main")
-//     }.map_err(|e| format!("Function 'main' not found in JIT engine: {:?}", e))?;
-//     let result = unsafe { add_func.call() };
-//     println!("Result: {}", result);
 
     // loop {
     //     println!("Input: ");
@@ -128,6 +85,38 @@ fn main() -> Result<(), Box<dyn Error>> {
     //     codegen.build(&ast);
     //     println!("LLVM IR Code: \n{}", codegen.to_string())
     // }
+
+    Ok(())
+}
+
+fn run(path_buf: PathBuf) -> Result<(), Box<dyn Error>> {
+    let file_content = fs::read_to_string(path_buf)?;
+
+    let tokens = Lexer::new(&file_content).parse()?;
+    let mut ast = Parser::new(tokens).parse()?;
+
+    let mut symbol_table = SymbolTable::new();
+    let mut errors = vec![];
+
+    symbol_table.add("i32".to_string(), DataType::Type(Box::from(DataType::I32)));
+    symbol_table.add("bool".to_string(), DataType::Type(Box::from(DataType::Bool)));
+    // Add build-in functions here!
+
+    ast.analyze(&mut symbol_table, &mut errors);
+    errors.iter().for_each(|err| println!("{}", err));
+
+    let context = Context::create();
+    let mut codegen = CodeGenerator::new(&context);
+    ast.build(&mut codegen);
+
+    Target::initialize_native(&InitializationConfig::default())?;
+    let execution_engine = codegen.module.create_jit_execution_engine(OptimizationLevel::None)?;
+    let add_func = unsafe {
+        execution_engine.get_function::<unsafe extern "C" fn() -> i32>("main")
+    }.map_err(|e| format!("Function 'main' not found in JIT engine: {:?}", e))?;
+    let result = unsafe { add_func.call() };
+
+    println!("Result: {}", result);
 
     Ok(())
 }

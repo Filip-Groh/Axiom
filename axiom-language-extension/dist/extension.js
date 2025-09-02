@@ -1,7 +1,108 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ([
-/* 0 */,
+/* 0 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.activate = activate;
+exports.deactivate = deactivate;
+const vscode = __importStar(__webpack_require__(2));
+const node_1 = __webpack_require__(3);
+let client;
+let terminal;
+function activate(context) {
+    console.log("Axiom Language Extension activated!");
+    let disposable = vscode.commands.registerCommand('axiom-language-extension.runScript', () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+        const document = editor.document;
+        const path = document.uri.path;
+        const command = `/mnt/d/Projects/Axiom/target/debug/Axiom run ${path}`;
+        if (!terminal || terminal.exitStatus) {
+            terminal = vscode.window.createTerminal({ name: "Axiom" });
+        }
+        terminal.show(true);
+        terminal.sendText(command);
+    });
+    context.subscriptions.push(disposable);
+    let serverOptions = {
+        command: "/mnt/d/Projects/Axiom/target/debug/Axiom",
+        args: ["lsp"],
+    };
+    let clientOptions = {
+        documentSelector: [
+            {
+                scheme: "file",
+                language: "axiom"
+            }
+        ],
+        synchronize: {
+            fileEvents: vscode.workspace.createFileSystemWatcher("**/.clientrc")
+        }
+    };
+    client = new node_1.LanguageClient("axiomLSPServer", "Axiom LSP Server", serverOptions, clientOptions);
+    client.start();
+}
+function deactivate() {
+    if (client) {
+        client.stop();
+    }
+}
+
+
+/***/ }),
 /* 1 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("child_process");
+
+/***/ }),
+/* 2 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("vscode");
+
+/***/ }),
+/* 3 */
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
@@ -11,10 +112,10 @@
  * ----------------------------------------------------------------------------------------- */
 
 
-module.exports = __webpack_require__(2);
+module.exports = __webpack_require__(4);
 
 /***/ }),
-/* 2 */
+/* 4 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -39,10 +140,10 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SettingMonitor = exports.LanguageClient = exports.TransportKind = void 0;
-const cp = __webpack_require__(3);
-const fs = __webpack_require__(4);
-const path = __webpack_require__(5);
-const vscode_1 = __webpack_require__(6);
+const cp = __webpack_require__(1);
+const fs = __webpack_require__(5);
+const path = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const Is = __webpack_require__(7);
 const client_1 = __webpack_require__(8);
 const processes_1 = __webpack_require__(113);
@@ -591,32 +692,18 @@ function handleChildProcessStartError(process, message) {
 
 
 /***/ }),
-/* 3 */
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("child_process");
-
-/***/ }),
-/* 4 */
+/* 5 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("fs");
 
 /***/ }),
-/* 5 */
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("path");
-
-/***/ }),
 /* 6 */
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("vscode");
+module.exports = require("path");
 
 /***/ }),
 /* 7 */
@@ -694,7 +781,7 @@ exports.asPromise = asPromise;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProposedFeatures = exports.BaseLanguageClient = exports.MessageTransports = exports.SuspendMode = exports.State = exports.CloseAction = exports.ErrorAction = exports.RevealOutputChannelOn = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const c2p = __webpack_require__(59);
 const p2c = __webpack_require__(70);
@@ -2366,7 +2453,7 @@ exports.createMessageConnection = exports.createServerSocketTransport = exports.
 const ril_1 = __webpack_require__(12);
 // Install the node runtime abstract.
 ril_1.default.install();
-const path = __webpack_require__(5);
+const path = __webpack_require__(6);
 const os = __webpack_require__(28);
 const crypto_1 = __webpack_require__(29);
 const net_1 = __webpack_require__(30);
@@ -10380,7 +10467,7 @@ exports.createProtocolConnection = createProtocolConnection;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createConverter = void 0;
-const code = __webpack_require__(6);
+const code = __webpack_require__(2);
 const proto = __webpack_require__(9);
 const Is = __webpack_require__(7);
 const async = __webpack_require__(60);
@@ -11545,7 +11632,7 @@ exports.forEach = forEach;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code = __webpack_require__(6);
+const code = __webpack_require__(2);
 class ProtocolCompletionItem extends code.CompletionItem {
     constructor(label) {
         super(label);
@@ -11565,7 +11652,7 @@ exports["default"] = ProtocolCompletionItem;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code = __webpack_require__(6);
+const code = __webpack_require__(2);
 class ProtocolCodeLens extends code.CodeLens {
     constructor(range) {
         super(range);
@@ -11585,7 +11672,7 @@ exports["default"] = ProtocolCodeLens;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code = __webpack_require__(6);
+const code = __webpack_require__(2);
 class ProtocolDocumentLink extends code.DocumentLink {
     constructor(range, target) {
         super(range, target);
@@ -11605,7 +11692,7 @@ exports["default"] = ProtocolDocumentLink;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const vscode = __webpack_require__(6);
+const vscode = __webpack_require__(2);
 class ProtocolCodeAction extends vscode.CodeAction {
     constructor(title, data) {
         super(title);
@@ -11627,7 +11714,7 @@ exports["default"] = ProtocolCodeAction;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProtocolDiagnostic = exports.DiagnosticCode = void 0;
-const vscode = __webpack_require__(6);
+const vscode = __webpack_require__(2);
 const Is = __webpack_require__(7);
 var DiagnosticCode;
 (function (DiagnosticCode) {
@@ -11658,7 +11745,7 @@ exports.ProtocolDiagnostic = ProtocolDiagnostic;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code = __webpack_require__(6);
+const code = __webpack_require__(2);
 class ProtocolCallHierarchyItem extends code.CallHierarchyItem {
     constructor(kind, name, detail, uri, range, selectionRange, data) {
         super(kind, name, detail, uri, range, selectionRange);
@@ -11681,7 +11768,7 @@ exports["default"] = ProtocolCallHierarchyItem;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code = __webpack_require__(6);
+const code = __webpack_require__(2);
 class ProtocolTypeHierarchyItem extends code.TypeHierarchyItem {
     constructor(kind, name, detail, uri, range, selectionRange, data) {
         super(kind, name, detail, uri, range, selectionRange);
@@ -11704,7 +11791,7 @@ exports["default"] = ProtocolTypeHierarchyItem;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code = __webpack_require__(6);
+const code = __webpack_require__(2);
 class WorkspaceSymbol extends code.SymbolInformation {
     constructor(name, kind, containerName, locationOrUri, data) {
         const hasRange = !(locationOrUri instanceof code.Uri);
@@ -11729,7 +11816,7 @@ exports["default"] = WorkspaceSymbol;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code = __webpack_require__(6);
+const code = __webpack_require__(2);
 class ProtocolInlayHint extends code.InlayHint {
     constructor(position, label, kind) {
         super(position, label, kind);
@@ -11750,7 +11837,7 @@ exports["default"] = ProtocolInlayHint;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createConverter = void 0;
-const code = __webpack_require__(6);
+const code = __webpack_require__(2);
 const ls = __webpack_require__(9);
 const Is = __webpack_require__(7);
 const async = __webpack_require__(60);
@@ -12995,7 +13082,7 @@ exports.generateUuid = generateUuid;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProgressPart = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const Is = __webpack_require__(7);
 class ProgressPart {
@@ -13098,7 +13185,7 @@ exports.ProgressPart = ProgressPart;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkspaceFeature = exports.TextDocumentLanguageFeature = exports.TextDocumentEventFeature = exports.DynamicDocumentFeature = exports.DynamicFeature = exports.StaticFeature = exports.ensure = exports.LSPCancellationError = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const Is = __webpack_require__(7);
 const UUID = __webpack_require__(71);
@@ -13397,7 +13484,7 @@ exports.WorkspaceFeature = WorkspaceFeature;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DiagnosticFeature = exports.DiagnosticPullMode = exports.vsdiag = void 0;
 const minimatch = __webpack_require__(75);
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const uuid_1 = __webpack_require__(71);
 const features_1 = __webpack_require__(73);
@@ -15455,7 +15542,7 @@ function range(a, b, str) {
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotebookDocumentSyncFeature = void 0;
-const vscode = __webpack_require__(6);
+const vscode = __webpack_require__(2);
 const minimatch = __webpack_require__(75);
 const proto = __webpack_require__(9);
 const UUID = __webpack_require__(71);
@@ -16313,7 +16400,7 @@ NotebookDocumentSyncFeature.CellScheme = 'vscode-notebook-cell';
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SyncConfigurationFeature = exports.toJSONObject = exports.ConfigurationFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const Is = __webpack_require__(7);
 const UUID = __webpack_require__(71);
@@ -16529,7 +16616,7 @@ exports.SyncConfigurationFeature = SyncConfigurationFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DidSaveTextDocumentFeature = exports.WillSaveWaitUntilFeature = exports.WillSaveFeature = exports.DidChangeTextDocumentFeature = exports.DidCloseTextDocumentFeature = exports.DidOpenTextDocumentFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
@@ -16938,7 +17025,7 @@ exports.DidSaveTextDocumentFeature = DidSaveTextDocumentFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CompletionItemFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
@@ -17071,7 +17158,7 @@ exports.CompletionItemFeature = CompletionItemFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HoverFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
@@ -17136,7 +17223,7 @@ exports.HoverFeature = HoverFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DefinitionFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
@@ -17198,7 +17285,7 @@ exports.DefinitionFeature = DefinitionFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SignatureHelpFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
@@ -17276,7 +17363,7 @@ exports.SignatureHelpFeature = SignatureHelpFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentHighlightFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
@@ -17333,7 +17420,7 @@ exports.DocumentHighlightFeature = DocumentHighlightFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentSymbolFeature = exports.SupportedSymbolTags = exports.SupportedSymbolKinds = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
@@ -17444,7 +17531,7 @@ exports.DocumentSymbolFeature = DocumentSymbolFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkspaceSymbolFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 const documentSymbol_1 = __webpack_require__(87);
@@ -17530,7 +17617,7 @@ exports.WorkspaceSymbolFeature = WorkspaceSymbolFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ReferencesFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
@@ -17590,7 +17677,7 @@ exports.ReferencesFeature = ReferencesFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CodeActionFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const UUID = __webpack_require__(71);
 const features_1 = __webpack_require__(73);
@@ -17696,7 +17783,7 @@ exports.CodeActionFeature = CodeActionFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CodeLensFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const UUID = __webpack_require__(71);
 const features_1 = __webpack_require__(73);
@@ -17781,7 +17868,7 @@ exports.CodeLensFeature = CodeLensFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentOnTypeFormattingFeature = exports.DocumentRangeFormattingFeature = exports.DocumentFormattingFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const UUID = __webpack_require__(71);
 const features_1 = __webpack_require__(73);
@@ -17970,7 +18057,7 @@ exports.DocumentOnTypeFormattingFeature = DocumentOnTypeFormattingFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RenameFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const UUID = __webpack_require__(71);
 const Is = __webpack_require__(7);
@@ -18090,7 +18177,7 @@ exports.RenameFeature = RenameFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentLinkFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
@@ -18168,7 +18255,7 @@ exports.DocumentLinkFeature = DocumentLinkFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExecuteCommandFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const UUID = __webpack_require__(71);
 const features_1 = __webpack_require__(73);
@@ -18247,7 +18334,7 @@ exports.ExecuteCommandFeature = ExecuteCommandFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FileSystemWatcherFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 class FileSystemWatcherFeature {
@@ -18349,7 +18436,7 @@ exports.FileSystemWatcherFeature = FileSystemWatcherFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ColorProviderFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 class ColorProviderFeature extends features_1.TextDocumentLanguageFeature {
@@ -18430,7 +18517,7 @@ exports.ColorProviderFeature = ColorProviderFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ImplementationFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 class ImplementationFeature extends features_1.TextDocumentLanguageFeature {
@@ -18491,7 +18578,7 @@ exports.ImplementationFeature = ImplementationFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TypeDefinitionFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 class TypeDefinitionFeature extends features_1.TextDocumentLanguageFeature {
@@ -18554,7 +18641,7 @@ exports.TypeDefinitionFeature = TypeDefinitionFeature;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkspaceFoldersFeature = exports.arrayDiff = void 0;
 const UUID = __webpack_require__(71);
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 function access(target, key) {
     if (target === undefined || target === null) {
@@ -18708,7 +18795,7 @@ exports.WorkspaceFoldersFeature = WorkspaceFoldersFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FoldingRangeFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 class FoldingRangeFeature extends features_1.TextDocumentLanguageFeature {
@@ -18780,7 +18867,7 @@ exports.FoldingRangeFeature = FoldingRangeFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DeclarationFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 class DeclarationFeature extends features_1.TextDocumentLanguageFeature {
@@ -18841,7 +18928,7 @@ exports.DeclarationFeature = DeclarationFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SelectionRangeFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 class SelectionRangeFeature extends features_1.TextDocumentLanguageFeature {
@@ -18956,7 +19043,7 @@ exports.ProgressFeature = ProgressFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CallHierarchyFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 class CallHierarchyProvider {
@@ -19060,7 +19147,7 @@ exports.CallHierarchyFeature = CallHierarchyFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SemanticTokensFeature = void 0;
-const vscode = __webpack_require__(6);
+const vscode = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 const Is = __webpack_require__(7);
@@ -19246,7 +19333,7 @@ exports.SemanticTokensFeature = SemanticTokensFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WillDeleteFilesFeature = exports.WillRenameFilesFeature = exports.WillCreateFilesFeature = exports.DidDeleteFilesFeature = exports.DidRenameFilesFeature = exports.DidCreateFilesFeature = void 0;
-const code = __webpack_require__(6);
+const code = __webpack_require__(2);
 const minimatch = __webpack_require__(75);
 const proto = __webpack_require__(9);
 const UUID = __webpack_require__(71);
@@ -19586,7 +19673,7 @@ exports.WillDeleteFilesFeature = WillDeleteFilesFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LinkedEditingFeature = void 0;
-const code = __webpack_require__(6);
+const code = __webpack_require__(2);
 const proto = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 class LinkedEditingFeature extends features_1.TextDocumentLanguageFeature {
@@ -19646,7 +19733,7 @@ exports.LinkedEditingFeature = LinkedEditingFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TypeHierarchyFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 class TypeHierarchyProvider {
@@ -19749,7 +19836,7 @@ exports.TypeHierarchyFeature = TypeHierarchyFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InlineValueFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 class InlineValueFeature extends features_1.TextDocumentLanguageFeature {
@@ -19821,7 +19908,7 @@ exports.InlineValueFeature = InlineValueFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InlayHintsFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 class InlayHintsFeature extends features_1.TextDocumentLanguageFeature {
@@ -19920,7 +20007,7 @@ exports.InlayHintsFeature = InlayHintsFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InlineCompletionItemFeature = void 0;
-const vscode_1 = __webpack_require__(6);
+const vscode_1 = __webpack_require__(2);
 const vscode_languageserver_protocol_1 = __webpack_require__(9);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
@@ -19981,8 +20068,8 @@ exports.InlineCompletionItemFeature = InlineCompletionItemFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.terminate = void 0;
-const cp = __webpack_require__(3);
-const path_1 = __webpack_require__(5);
+const cp = __webpack_require__(1);
+const path_1 = __webpack_require__(6);
 const isWindows = (process.platform === 'win32');
 const isMacintosh = (process.platform === 'darwin');
 const isLinux = (process.platform === 'linux');
@@ -21731,42 +21818,13 @@ __exportStar(__webpack_require__(8), exports);
 /******/ 	})();
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
-(() => {
-"use strict";
-var exports = __webpack_exports__;
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.activate = activate;
-exports.deactivate = deactivate;
-const node_1 = __webpack_require__(1);
-let client;
-function activate(context) {
-    console.log("Axiom Language Extension activated!");
-    let serverOptions = {
-        command: "/mnt/d/Projects/Axiom/target/debug/Axiom",
-        args: ["lsp"]
-    };
-    let clientOptions = {
-        documentSelector: [
-            {
-                language: "axiom"
-            }
-        ]
-    };
-    client = new node_1.LanguageClient("Axiom LSP Server", serverOptions, clientOptions);
-    client.start();
-}
-function deactivate() {
-    if (client) {
-        client.stop();
-    }
-}
-
-})();
-
-module.exports = __webpack_exports__;
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __webpack_require__(0);
+/******/ 	module.exports = __webpack_exports__;
+/******/ 	
 /******/ })()
 ;
 //# sourceMappingURL=extension.js.map

@@ -1,19 +1,19 @@
 use crate::analyzer::Analyzer;
-use crate::ast::{IdentifierNode, Node};
+use crate::ast::{CallNode, IdentifierNode, Node};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::Location;
+use crate::error::location::{Location, Range};
 use crate::utils::SymbolTable;
 
 pub struct DeclarationNode {
-    pub location: Location,
+    location: Range,
     pub identifier_node: Box<IdentifierNode>,
     pub expression: Box<Node>,
 }
 
 impl DeclarationNode {
-    pub fn new(location: Location, identifier_node: Box<IdentifierNode>, expression: Box<Node>) -> DeclarationNode {
+    pub fn new(location: Range, identifier_node: Box<IdentifierNode>, expression: Box<Node>) -> DeclarationNode {
         DeclarationNode {
             location,
             identifier_node,
@@ -24,6 +24,12 @@ impl DeclarationNode {
     pub fn display(&self, indent: usize) {
         println!("{}- let {} = ", " ".repeat(indent * 4), self.identifier_node.identifier_token.name);
         self.expression.display(indent * 4);
+    }
+}
+
+impl Location for DeclarationNode {
+    fn location(&self) -> Range {
+        self.location.clone()
     }
 }
 

@@ -1,23 +1,22 @@
 use inkwell::values::IntValue;
 use crate::analyzer::Analyzer;
+use crate::ast::FunctionNode;
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::Location;
+use crate::error::location::{Location, Range};
 use crate::token::{IdentifierToken};
 use crate::utils::SymbolTable;
 
 #[derive(Clone)]
 pub struct IdentifierNode {
-    pub location: Location,
     pub data_type: DataType,
     pub identifier_token: IdentifierToken,
 }
 
 impl IdentifierNode {
-    pub fn new(location: Location, identifier_token: IdentifierToken) -> IdentifierNode {
+    pub fn new(identifier_token: IdentifierToken) -> IdentifierNode {
         IdentifierNode {
-            location,
             data_type: DataType::ToBeInferred,
             identifier_token
         }
@@ -28,6 +27,12 @@ impl IdentifierNode {
     }
 }
 
+impl Location for IdentifierNode {
+    fn location(&self) -> Range {
+        self.identifier_token.location()
+    }
+}
+
 impl Analyzer for IdentifierNode {
     fn analyze(&mut self, symbol_table: &mut SymbolTable<String, DataType>, errors: &mut Vec<AxiomError>) {
         match symbol_table.get(&self.identifier_token.name) {
@@ -35,7 +40,7 @@ impl Analyzer for IdentifierNode {
                 self.data_type = data_type.clone()
             }
             None => {
-                errors.push(AxiomError::IdentifierUsedBeforeDeclaration(self.location.clone(), self.identifier_token.name.clone()));
+                errors.push(AxiomError::IdentifierUsedBeforeDeclaration(self.location(), self.identifier_token.name.clone()));
             }
         }
     }

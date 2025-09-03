@@ -1,3 +1,6 @@
+use crate::error::location::{Location, Range};
+use crate::token::IdentifierToken;
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum KeywordType {
     Let,
@@ -8,12 +11,14 @@ pub enum KeywordType {
 #[derive(Debug, PartialEq, Clone)]
 pub struct KeywordToken {
     pub keyword_type: KeywordType,
+    location: Range
 }
 
 impl KeywordToken {
-    pub fn new(keyword_type: KeywordType) -> KeywordToken {
+    pub fn new(keyword_type: KeywordType, location: Range) -> KeywordToken {
         KeywordToken {
-            keyword_type
+            keyword_type,
+            location
         }
     }
     
@@ -24,5 +29,11 @@ impl KeywordToken {
             "return" => Some(KeywordType::Return),
             _ => None,
         }
+    }
+}
+
+impl Location for KeywordToken {
+    fn location(&self) -> Range {
+        self.location.clone()
     }
 }

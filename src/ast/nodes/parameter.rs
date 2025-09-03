@@ -1,20 +1,20 @@
 use inkwell::types::BasicMetadataTypeEnum;
 use crate::analyzer::Analyzer;
-use crate::ast::{IdentifierNode};
+use crate::ast::{IdentifierNode, NumberNode};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::Location;
+use crate::error::location::{Location, Range};
 use crate::utils::SymbolTable;
 
 pub struct ParameterNode {
-    pub location: Location,
+    location: Range,
     pub identifier_node: Box<IdentifierNode>,
     pub type_node: Box<IdentifierNode>,
 }
 
 impl ParameterNode {
-    pub fn new(location: Location, identifier_node: Box<IdentifierNode>, type_node: Box<IdentifierNode>) -> ParameterNode {
+    pub fn new(location: Range, identifier_node: Box<IdentifierNode>, type_node: Box<IdentifierNode>) -> ParameterNode {
         ParameterNode {
             location,
             identifier_node,
@@ -27,6 +27,12 @@ impl ParameterNode {
     }
 }
 
+impl Location for ParameterNode {
+    fn location(&self) -> Range {
+        self.location.clone()
+    }
+}
+
 impl Analyzer for ParameterNode {
     fn analyze(&mut self, symbol_table: &mut SymbolTable<String, DataType>, errors: &mut Vec<AxiomError>) {
         match symbol_table.get(&self.type_node.identifier_token.name) {
@@ -34,11 +40,11 @@ impl Analyzer for ParameterNode {
                 if let DataType::Type(underlying_type) = data_type {
                     self.identifier_node.data_type = *underlying_type.clone();
                 } else {
-                    errors.push(AxiomError::NotAType(self.type_node.location.clone(), self.type_node.identifier_token.name.clone()));
+                    errors.push(AxiomError::NotAType(self.type_node.location(), self.type_node.identifier_token.name.clone()));
                 }
             }
             None => {
-                errors.push(AxiomError::IdentifierUsedBeforeDeclaration(self.type_node.location.clone(), self.type_node.identifier_token.name.clone()));
+                errors.push(AxiomError::IdentifierUsedBeforeDeclaration(self.type_node.location(), self.type_node.identifier_token.name.clone()));
             }
         }
     }

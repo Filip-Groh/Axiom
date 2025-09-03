@@ -1,20 +1,20 @@
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter, Result};
 use crate::datatype::DataType;
-use crate::error::location::Location;
+use crate::error::location::{Position, Range};
 
 pub mod location;
 
 #[derive(Debug)]
 pub enum AxiomError {
-    UnexpectedEOF(Location),
-    SyntaxError(Location, String),
-    DuplicatedIdentifier(Location, String),
-    IdentifierUsedBeforeDeclaration(Location, String),
-    WrongDataType(Location, Box<DataType>, Box<DataType>),
-    NotAFunction(Location, String),
-    MismatchedNumberOfParameters(Location, String, usize, usize),
-    NotAType(Location, String),
+    UnexpectedEOF(Position),
+    SyntaxError(Range, String),
+    DuplicatedIdentifier(Range, String),
+    IdentifierUsedBeforeDeclaration(Range, String),
+    WrongDataType(Range, Box<DataType>, Box<DataType>),
+    NotAFunction(Range, String),
+    MismatchedNumberOfParameters(Range, String, usize, usize),
+    NotAType(Range, String),
 }
 
 impl Display for AxiomError {

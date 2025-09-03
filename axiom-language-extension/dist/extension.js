@@ -41,7 +41,8 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.activate = activate;
 exports.deactivate = deactivate;
-const vscode = __importStar(__webpack_require__(2));
+const vscode = __importStar(__webpack_require__(1));
+const net = __importStar(__webpack_require__(2));
 const node_1 = __webpack_require__(3);
 let client;
 let terminal;
@@ -62,9 +63,25 @@ function activate(context) {
         terminal.sendText(command);
     });
     context.subscriptions.push(disposable);
-    let serverOptions = {
-        command: "/mnt/d/Projects/Axiom/target/debug/Axiom",
-        args: ["lsp"],
+    // let serverOptions: ServerOptions = {
+    // 	command: "/mnt/d/Projects/Axiom/target/debug/Axiom",
+    // 	args: ["lsp"],
+    // }
+    const serverOptions = () => {
+        return new Promise((resolve, reject) => {
+            const socket = net.connect({ port: 9999 });
+            socket.on('error', (err) => {
+                vscode.window.showErrorMessage(`Failed to connect to language server: ${err.message}`);
+                reject(err);
+            });
+            socket.on('connect', () => {
+                console.log('Successfully connected to Axiom LSP on port 9999.');
+                resolve({
+                    writer: socket,
+                    reader: socket
+                });
+            });
+        });
     };
     let clientOptions = {
         documentSelector: [
@@ -92,14 +109,14 @@ function deactivate() {
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("child_process");
+module.exports = require("vscode");
 
 /***/ }),
 /* 2 */
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("vscode");
+module.exports = require("net");
 
 /***/ }),
 /* 3 */
@@ -140,12 +157,12 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SettingMonitor = exports.LanguageClient = exports.TransportKind = void 0;
-const cp = __webpack_require__(1);
-const fs = __webpack_require__(5);
-const path = __webpack_require__(6);
-const vscode_1 = __webpack_require__(2);
-const Is = __webpack_require__(7);
-const client_1 = __webpack_require__(8);
+const cp = __webpack_require__(5);
+const fs = __webpack_require__(6);
+const path = __webpack_require__(7);
+const vscode_1 = __webpack_require__(1);
+const Is = __webpack_require__(8);
+const client_1 = __webpack_require__(9);
 const processes_1 = __webpack_require__(113);
 const node_1 = __webpack_require__(114);
 // Import SemVer functions individually to avoid circular dependencies in SemVer
@@ -696,17 +713,24 @@ function handleChildProcessStartError(process, message) {
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("fs");
+module.exports = require("child_process");
 
 /***/ }),
 /* 6 */
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("path");
+module.exports = require("fs");
 
 /***/ }),
 /* 7 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("path");
+
+/***/ }),
+/* 8 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -770,7 +794,7 @@ exports.asPromise = asPromise;
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -781,11 +805,11 @@ exports.asPromise = asPromise;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProposedFeatures = exports.BaseLanguageClient = exports.MessageTransports = exports.SuspendMode = exports.State = exports.CloseAction = exports.ErrorAction = exports.RevealOutputChannelOn = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const c2p = __webpack_require__(59);
 const p2c = __webpack_require__(70);
-const Is = __webpack_require__(7);
+const Is = __webpack_require__(8);
 const async_1 = __webpack_require__(60);
 const UUID = __webpack_require__(71);
 const progressPart_1 = __webpack_require__(72);
@@ -2377,7 +2401,7 @@ var ProposedFeatures;
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -2402,8 +2426,8 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createProtocolConnection = void 0;
-const node_1 = __webpack_require__(10);
-__exportStar(__webpack_require__(10), exports);
+const node_1 = __webpack_require__(11);
+__exportStar(__webpack_require__(11), exports);
 __exportStar(__webpack_require__(31), exports);
 function createProtocolConnection(input, output, logger, options) {
     return (0, node_1.createMessageConnection)(input, output, logger, options);
@@ -2412,7 +2436,7 @@ exports.createProtocolConnection = createProtocolConnection;
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
@@ -2422,10 +2446,10 @@ exports.createProtocolConnection = createProtocolConnection;
  * ----------------------------------------------------------------------------------------- */
 
 
-module.exports = __webpack_require__(11);
+module.exports = __webpack_require__(12);
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -2450,15 +2474,15 @@ exports.createMessageConnection = exports.createServerSocketTransport = exports.
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ----------------------------------------------------------------------------------------- */
-const ril_1 = __webpack_require__(12);
+const ril_1 = __webpack_require__(13);
 // Install the node runtime abstract.
 ril_1.default.install();
-const path = __webpack_require__(6);
-const os = __webpack_require__(28);
-const crypto_1 = __webpack_require__(29);
-const net_1 = __webpack_require__(30);
-const api_1 = __webpack_require__(14);
-__exportStar(__webpack_require__(14), exports);
+const path = __webpack_require__(7);
+const os = __webpack_require__(29);
+const crypto_1 = __webpack_require__(30);
+const net_1 = __webpack_require__(2);
+const api_1 = __webpack_require__(15);
+__exportStar(__webpack_require__(15), exports);
 class IPCMessageReader extends api_1.AbstractMessageReader {
     constructor(process) {
         super();
@@ -2689,7 +2713,7 @@ exports.createMessageConnection = createMessageConnection;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -2699,8 +2723,8 @@ exports.createMessageConnection = createMessageConnection;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const util_1 = __webpack_require__(13);
-const api_1 = __webpack_require__(14);
+const util_1 = __webpack_require__(14);
+const api_1 = __webpack_require__(15);
 class MessageBuffer extends api_1.AbstractMessageBuffer {
     constructor(encoding = 'utf-8') {
         super(encoding);
@@ -2857,14 +2881,14 @@ exports["default"] = RIL;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("util");
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -2877,7 +2901,7 @@ module.exports = require("util");
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProgressType = exports.ProgressToken = exports.createMessageConnection = exports.NullLogger = exports.ConnectionOptions = exports.ConnectionStrategy = exports.AbstractMessageBuffer = exports.WriteableStreamMessageWriter = exports.AbstractMessageWriter = exports.MessageWriter = exports.ReadableStreamMessageReader = exports.AbstractMessageReader = exports.MessageReader = exports.SharedArrayReceiverStrategy = exports.SharedArraySenderStrategy = exports.CancellationToken = exports.CancellationTokenSource = exports.Emitter = exports.Event = exports.Disposable = exports.LRUCache = exports.Touch = exports.LinkedMap = exports.ParameterStructures = exports.NotificationType9 = exports.NotificationType8 = exports.NotificationType7 = exports.NotificationType6 = exports.NotificationType5 = exports.NotificationType4 = exports.NotificationType3 = exports.NotificationType2 = exports.NotificationType1 = exports.NotificationType0 = exports.NotificationType = exports.ErrorCodes = exports.ResponseError = exports.RequestType9 = exports.RequestType8 = exports.RequestType7 = exports.RequestType6 = exports.RequestType5 = exports.RequestType4 = exports.RequestType3 = exports.RequestType2 = exports.RequestType1 = exports.RequestType0 = exports.RequestType = exports.Message = exports.RAL = void 0;
 exports.MessageStrategy = exports.CancellationStrategy = exports.CancellationSenderStrategy = exports.CancellationReceiverStrategy = exports.ConnectionError = exports.ConnectionErrors = exports.LogTraceNotification = exports.SetTraceNotification = exports.TraceFormat = exports.TraceValues = exports.Trace = void 0;
-const messages_1 = __webpack_require__(15);
+const messages_1 = __webpack_require__(16);
 Object.defineProperty(exports, "Message", ({ enumerable: true, get: function () { return messages_1.Message; } }));
 Object.defineProperty(exports, "RequestType", ({ enumerable: true, get: function () { return messages_1.RequestType; } }));
 Object.defineProperty(exports, "RequestType0", ({ enumerable: true, get: function () { return messages_1.RequestType0; } }));
@@ -2904,32 +2928,32 @@ Object.defineProperty(exports, "NotificationType7", ({ enumerable: true, get: fu
 Object.defineProperty(exports, "NotificationType8", ({ enumerable: true, get: function () { return messages_1.NotificationType8; } }));
 Object.defineProperty(exports, "NotificationType9", ({ enumerable: true, get: function () { return messages_1.NotificationType9; } }));
 Object.defineProperty(exports, "ParameterStructures", ({ enumerable: true, get: function () { return messages_1.ParameterStructures; } }));
-const linkedMap_1 = __webpack_require__(17);
+const linkedMap_1 = __webpack_require__(18);
 Object.defineProperty(exports, "LinkedMap", ({ enumerable: true, get: function () { return linkedMap_1.LinkedMap; } }));
 Object.defineProperty(exports, "LRUCache", ({ enumerable: true, get: function () { return linkedMap_1.LRUCache; } }));
 Object.defineProperty(exports, "Touch", ({ enumerable: true, get: function () { return linkedMap_1.Touch; } }));
-const disposable_1 = __webpack_require__(18);
+const disposable_1 = __webpack_require__(19);
 Object.defineProperty(exports, "Disposable", ({ enumerable: true, get: function () { return disposable_1.Disposable; } }));
-const events_1 = __webpack_require__(19);
+const events_1 = __webpack_require__(20);
 Object.defineProperty(exports, "Event", ({ enumerable: true, get: function () { return events_1.Event; } }));
 Object.defineProperty(exports, "Emitter", ({ enumerable: true, get: function () { return events_1.Emitter; } }));
-const cancellation_1 = __webpack_require__(21);
+const cancellation_1 = __webpack_require__(22);
 Object.defineProperty(exports, "CancellationTokenSource", ({ enumerable: true, get: function () { return cancellation_1.CancellationTokenSource; } }));
 Object.defineProperty(exports, "CancellationToken", ({ enumerable: true, get: function () { return cancellation_1.CancellationToken; } }));
-const sharedArrayCancellation_1 = __webpack_require__(22);
+const sharedArrayCancellation_1 = __webpack_require__(23);
 Object.defineProperty(exports, "SharedArraySenderStrategy", ({ enumerable: true, get: function () { return sharedArrayCancellation_1.SharedArraySenderStrategy; } }));
 Object.defineProperty(exports, "SharedArrayReceiverStrategy", ({ enumerable: true, get: function () { return sharedArrayCancellation_1.SharedArrayReceiverStrategy; } }));
-const messageReader_1 = __webpack_require__(23);
+const messageReader_1 = __webpack_require__(24);
 Object.defineProperty(exports, "MessageReader", ({ enumerable: true, get: function () { return messageReader_1.MessageReader; } }));
 Object.defineProperty(exports, "AbstractMessageReader", ({ enumerable: true, get: function () { return messageReader_1.AbstractMessageReader; } }));
 Object.defineProperty(exports, "ReadableStreamMessageReader", ({ enumerable: true, get: function () { return messageReader_1.ReadableStreamMessageReader; } }));
-const messageWriter_1 = __webpack_require__(25);
+const messageWriter_1 = __webpack_require__(26);
 Object.defineProperty(exports, "MessageWriter", ({ enumerable: true, get: function () { return messageWriter_1.MessageWriter; } }));
 Object.defineProperty(exports, "AbstractMessageWriter", ({ enumerable: true, get: function () { return messageWriter_1.AbstractMessageWriter; } }));
 Object.defineProperty(exports, "WriteableStreamMessageWriter", ({ enumerable: true, get: function () { return messageWriter_1.WriteableStreamMessageWriter; } }));
-const messageBuffer_1 = __webpack_require__(26);
+const messageBuffer_1 = __webpack_require__(27);
 Object.defineProperty(exports, "AbstractMessageBuffer", ({ enumerable: true, get: function () { return messageBuffer_1.AbstractMessageBuffer; } }));
-const connection_1 = __webpack_require__(27);
+const connection_1 = __webpack_require__(28);
 Object.defineProperty(exports, "ConnectionStrategy", ({ enumerable: true, get: function () { return connection_1.ConnectionStrategy; } }));
 Object.defineProperty(exports, "ConnectionOptions", ({ enumerable: true, get: function () { return connection_1.ConnectionOptions; } }));
 Object.defineProperty(exports, "NullLogger", ({ enumerable: true, get: function () { return connection_1.NullLogger; } }));
@@ -2947,12 +2971,12 @@ Object.defineProperty(exports, "CancellationReceiverStrategy", ({ enumerable: tr
 Object.defineProperty(exports, "CancellationSenderStrategy", ({ enumerable: true, get: function () { return connection_1.CancellationSenderStrategy; } }));
 Object.defineProperty(exports, "CancellationStrategy", ({ enumerable: true, get: function () { return connection_1.CancellationStrategy; } }));
 Object.defineProperty(exports, "MessageStrategy", ({ enumerable: true, get: function () { return connection_1.MessageStrategy; } }));
-const ral_1 = __webpack_require__(20);
+const ral_1 = __webpack_require__(21);
 exports.RAL = ral_1.default;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -2963,7 +2987,7 @@ exports.RAL = ral_1.default;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Message = exports.NotificationType9 = exports.NotificationType8 = exports.NotificationType7 = exports.NotificationType6 = exports.NotificationType5 = exports.NotificationType4 = exports.NotificationType3 = exports.NotificationType2 = exports.NotificationType1 = exports.NotificationType0 = exports.NotificationType = exports.RequestType9 = exports.RequestType8 = exports.RequestType7 = exports.RequestType6 = exports.RequestType5 = exports.RequestType4 = exports.RequestType3 = exports.RequestType2 = exports.RequestType1 = exports.RequestType = exports.RequestType0 = exports.AbstractMessageSignature = exports.ParameterStructures = exports.ResponseError = exports.ErrorCodes = void 0;
-const is = __webpack_require__(16);
+const is = __webpack_require__(17);
 /**
  * Predefined error codes.
  */
@@ -3265,7 +3289,7 @@ var Message;
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -3307,7 +3331,7 @@ exports.stringArray = stringArray;
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -3712,7 +3736,7 @@ exports.LRUCache = LRUCache;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -3735,7 +3759,7 @@ var Disposable;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -3746,7 +3770,7 @@ var Disposable;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Emitter = exports.Event = void 0;
-const ral_1 = __webpack_require__(20);
+const ral_1 = __webpack_require__(21);
 var Event;
 (function (Event) {
     const _disposable = { dispose() { } };
@@ -3870,7 +3894,7 @@ Emitter._noop = function () { };
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -3900,7 +3924,7 @@ exports["default"] = RAL;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -3911,9 +3935,9 @@ exports["default"] = RAL;
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CancellationTokenSource = exports.CancellationToken = void 0;
-const ral_1 = __webpack_require__(20);
-const Is = __webpack_require__(16);
-const events_1 = __webpack_require__(19);
+const ral_1 = __webpack_require__(21);
+const Is = __webpack_require__(17);
+const events_1 = __webpack_require__(20);
 var CancellationToken;
 (function (CancellationToken) {
     CancellationToken.None = Object.freeze({
@@ -4003,7 +4027,7 @@ exports.CancellationTokenSource = CancellationTokenSource;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -4014,7 +4038,7 @@ exports.CancellationTokenSource = CancellationTokenSource;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SharedArrayReceiverStrategy = exports.SharedArraySenderStrategy = void 0;
-const cancellation_1 = __webpack_require__(21);
+const cancellation_1 = __webpack_require__(22);
 var CancellationState;
 (function (CancellationState) {
     CancellationState.Continue = 0;
@@ -4086,7 +4110,7 @@ exports.SharedArrayReceiverStrategy = SharedArrayReceiverStrategy;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -4097,10 +4121,10 @@ exports.SharedArrayReceiverStrategy = SharedArrayReceiverStrategy;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ReadableStreamMessageReader = exports.AbstractMessageReader = exports.MessageReader = void 0;
-const ral_1 = __webpack_require__(20);
-const Is = __webpack_require__(16);
-const events_1 = __webpack_require__(19);
-const semaphore_1 = __webpack_require__(24);
+const ral_1 = __webpack_require__(21);
+const Is = __webpack_require__(17);
+const events_1 = __webpack_require__(20);
+const semaphore_1 = __webpack_require__(25);
 var MessageReader;
 (function (MessageReader) {
     function is(value) {
@@ -4290,7 +4314,7 @@ exports.ReadableStreamMessageReader = ReadableStreamMessageReader;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -4301,7 +4325,7 @@ exports.ReadableStreamMessageReader = ReadableStreamMessageReader;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Semaphore = void 0;
-const ral_1 = __webpack_require__(20);
+const ral_1 = __webpack_require__(21);
 class Semaphore {
     constructor(capacity = 1) {
         if (capacity <= 0) {
@@ -4365,7 +4389,7 @@ exports.Semaphore = Semaphore;
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -4376,10 +4400,10 @@ exports.Semaphore = Semaphore;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WriteableStreamMessageWriter = exports.AbstractMessageWriter = exports.MessageWriter = void 0;
-const ral_1 = __webpack_require__(20);
-const Is = __webpack_require__(16);
-const semaphore_1 = __webpack_require__(24);
-const events_1 = __webpack_require__(19);
+const ral_1 = __webpack_require__(21);
+const Is = __webpack_require__(17);
+const semaphore_1 = __webpack_require__(25);
+const events_1 = __webpack_require__(20);
 const ContentLength = 'Content-Length: ';
 const CRLF = '\r\n';
 var MessageWriter;
@@ -4487,7 +4511,7 @@ exports.WriteableStreamMessageWriter = WriteableStreamMessageWriter;
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -4646,7 +4670,7 @@ exports.AbstractMessageBuffer = AbstractMessageBuffer;
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -4657,12 +4681,12 @@ exports.AbstractMessageBuffer = AbstractMessageBuffer;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createMessageConnection = exports.ConnectionOptions = exports.MessageStrategy = exports.CancellationStrategy = exports.CancellationSenderStrategy = exports.CancellationReceiverStrategy = exports.RequestCancellationReceiverStrategy = exports.IdCancellationReceiverStrategy = exports.ConnectionStrategy = exports.ConnectionError = exports.ConnectionErrors = exports.LogTraceNotification = exports.SetTraceNotification = exports.TraceFormat = exports.TraceValues = exports.Trace = exports.NullLogger = exports.ProgressType = exports.ProgressToken = void 0;
-const ral_1 = __webpack_require__(20);
-const Is = __webpack_require__(16);
-const messages_1 = __webpack_require__(15);
-const linkedMap_1 = __webpack_require__(17);
-const events_1 = __webpack_require__(19);
-const cancellation_1 = __webpack_require__(21);
+const ral_1 = __webpack_require__(21);
+const Is = __webpack_require__(17);
+const messages_1 = __webpack_require__(16);
+const linkedMap_1 = __webpack_require__(18);
+const events_1 = __webpack_require__(20);
+const cancellation_1 = __webpack_require__(22);
 var CancelNotification;
 (function (CancelNotification) {
     CancelNotification.type = new messages_1.NotificationType('$/cancelRequest');
@@ -5865,25 +5889,18 @@ exports.createMessageConnection = createMessageConnection;
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("os");
 
 /***/ }),
-/* 29 */
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("crypto");
-
-/***/ }),
 /* 30 */
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("net");
+module.exports = require("crypto");
 
 /***/ }),
 /* 31 */
@@ -5911,7 +5928,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LSPErrorCodes = exports.createProtocolConnection = void 0;
-__exportStar(__webpack_require__(11), exports);
+__exportStar(__webpack_require__(12), exports);
 __exportStar(__webpack_require__(32), exports);
 __exportStar(__webpack_require__(34), exports);
 __exportStar(__webpack_require__(35), exports);
@@ -8276,7 +8293,7 @@ module.exports = webpackEmptyContext;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProtocolNotificationType = exports.ProtocolNotificationType0 = exports.ProtocolRequestType = exports.ProtocolRequestType0 = exports.RegistrationType = exports.MessageDirection = void 0;
-const vscode_jsonrpc_1 = __webpack_require__(11);
+const vscode_jsonrpc_1 = __webpack_require__(12);
 var MessageDirection;
 (function (MessageDirection) {
     MessageDirection["clientToServer"] = "clientToServer";
@@ -9583,7 +9600,7 @@ var SelectionRangeRequest;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkDoneProgressCancelNotification = exports.WorkDoneProgressCreateRequest = exports.WorkDoneProgress = void 0;
-const vscode_jsonrpc_1 = __webpack_require__(11);
+const vscode_jsonrpc_1 = __webpack_require__(12);
 const messages_1 = __webpack_require__(34);
 var WorkDoneProgress;
 (function (WorkDoneProgress) {
@@ -10114,7 +10131,7 @@ var InlayHintRefreshRequest;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DiagnosticRefreshRequest = exports.WorkspaceDiagnosticRequest = exports.DocumentDiagnosticRequest = exports.DocumentDiagnosticReportKind = exports.DiagnosticServerCancellationData = void 0;
-const vscode_jsonrpc_1 = __webpack_require__(11);
+const vscode_jsonrpc_1 = __webpack_require__(12);
 const Is = __webpack_require__(36);
 const messages_1 = __webpack_require__(34);
 /**
@@ -10445,7 +10462,7 @@ var InlineCompletionRequest;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createProtocolConnection = void 0;
-const vscode_jsonrpc_1 = __webpack_require__(11);
+const vscode_jsonrpc_1 = __webpack_require__(12);
 function createProtocolConnection(input, output, logger, options) {
     if (vscode_jsonrpc_1.ConnectionStrategy.is(options)) {
         options = { connectionStrategy: options };
@@ -10467,9 +10484,9 @@ exports.createProtocolConnection = createProtocolConnection;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createConverter = void 0;
-const code = __webpack_require__(2);
-const proto = __webpack_require__(9);
-const Is = __webpack_require__(7);
+const code = __webpack_require__(1);
+const proto = __webpack_require__(10);
+const Is = __webpack_require__(8);
 const async = __webpack_require__(60);
 const protocolCompletionItem_1 = __webpack_require__(61);
 const protocolCodeLens_1 = __webpack_require__(62);
@@ -11350,7 +11367,7 @@ exports.createConverter = createConverter;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.forEach = exports.mapAsync = exports.map = exports.clearTestMode = exports.setTestMode = exports.Semaphore = exports.Delayer = void 0;
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 class Delayer {
     constructor(defaultDelay) {
         this.defaultDelay = defaultDelay;
@@ -11632,7 +11649,7 @@ exports.forEach = forEach;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code = __webpack_require__(2);
+const code = __webpack_require__(1);
 class ProtocolCompletionItem extends code.CompletionItem {
     constructor(label) {
         super(label);
@@ -11652,7 +11669,7 @@ exports["default"] = ProtocolCompletionItem;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code = __webpack_require__(2);
+const code = __webpack_require__(1);
 class ProtocolCodeLens extends code.CodeLens {
     constructor(range) {
         super(range);
@@ -11672,7 +11689,7 @@ exports["default"] = ProtocolCodeLens;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code = __webpack_require__(2);
+const code = __webpack_require__(1);
 class ProtocolDocumentLink extends code.DocumentLink {
     constructor(range, target) {
         super(range, target);
@@ -11692,7 +11709,7 @@ exports["default"] = ProtocolDocumentLink;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const vscode = __webpack_require__(2);
+const vscode = __webpack_require__(1);
 class ProtocolCodeAction extends vscode.CodeAction {
     constructor(title, data) {
         super(title);
@@ -11714,8 +11731,8 @@ exports["default"] = ProtocolCodeAction;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProtocolDiagnostic = exports.DiagnosticCode = void 0;
-const vscode = __webpack_require__(2);
-const Is = __webpack_require__(7);
+const vscode = __webpack_require__(1);
+const Is = __webpack_require__(8);
 var DiagnosticCode;
 (function (DiagnosticCode) {
     function is(value) {
@@ -11745,7 +11762,7 @@ exports.ProtocolDiagnostic = ProtocolDiagnostic;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code = __webpack_require__(2);
+const code = __webpack_require__(1);
 class ProtocolCallHierarchyItem extends code.CallHierarchyItem {
     constructor(kind, name, detail, uri, range, selectionRange, data) {
         super(kind, name, detail, uri, range, selectionRange);
@@ -11768,7 +11785,7 @@ exports["default"] = ProtocolCallHierarchyItem;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code = __webpack_require__(2);
+const code = __webpack_require__(1);
 class ProtocolTypeHierarchyItem extends code.TypeHierarchyItem {
     constructor(kind, name, detail, uri, range, selectionRange, data) {
         super(kind, name, detail, uri, range, selectionRange);
@@ -11791,7 +11808,7 @@ exports["default"] = ProtocolTypeHierarchyItem;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code = __webpack_require__(2);
+const code = __webpack_require__(1);
 class WorkspaceSymbol extends code.SymbolInformation {
     constructor(name, kind, containerName, locationOrUri, data) {
         const hasRange = !(locationOrUri instanceof code.Uri);
@@ -11816,7 +11833,7 @@ exports["default"] = WorkspaceSymbol;
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code = __webpack_require__(2);
+const code = __webpack_require__(1);
 class ProtocolInlayHint extends code.InlayHint {
     constructor(position, label, kind) {
         super(position, label, kind);
@@ -11837,9 +11854,9 @@ exports["default"] = ProtocolInlayHint;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createConverter = void 0;
-const code = __webpack_require__(2);
-const ls = __webpack_require__(9);
-const Is = __webpack_require__(7);
+const code = __webpack_require__(1);
+const ls = __webpack_require__(10);
+const Is = __webpack_require__(8);
 const async = __webpack_require__(60);
 const protocolCompletionItem_1 = __webpack_require__(61);
 const protocolCodeLens_1 = __webpack_require__(62);
@@ -11850,7 +11867,7 @@ const protocolCallHierarchyItem_1 = __webpack_require__(66);
 const protocolTypeHierarchyItem_1 = __webpack_require__(67);
 const protocolWorkspaceSymbol_1 = __webpack_require__(68);
 const protocolInlayHint_1 = __webpack_require__(69);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 var CodeBlock;
 (function (CodeBlock) {
     function is(value) {
@@ -13082,9 +13099,9 @@ exports.generateUuid = generateUuid;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProgressPart = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
-const Is = __webpack_require__(7);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
+const Is = __webpack_require__(8);
 class ProgressPart {
     constructor(_client, _token, done) {
         this._client = _client;
@@ -13185,9 +13202,9 @@ exports.ProgressPart = ProgressPart;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkspaceFeature = exports.TextDocumentLanguageFeature = exports.TextDocumentEventFeature = exports.DynamicDocumentFeature = exports.DynamicFeature = exports.StaticFeature = exports.ensure = exports.LSPCancellationError = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
-const Is = __webpack_require__(7);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
+const Is = __webpack_require__(8);
 const UUID = __webpack_require__(71);
 class LSPCancellationError extends vscode_1.CancellationError {
     constructor(data) {
@@ -13484,8 +13501,8 @@ exports.WorkspaceFeature = WorkspaceFeature;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DiagnosticFeature = exports.DiagnosticPullMode = exports.vsdiag = void 0;
 const minimatch = __webpack_require__(75);
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const uuid_1 = __webpack_require__(71);
 const features_1 = __webpack_require__(73);
 function ensure(target, key) {
@@ -15542,11 +15559,11 @@ function range(a, b, str) {
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotebookDocumentSyncFeature = void 0;
-const vscode = __webpack_require__(2);
+const vscode = __webpack_require__(1);
 const minimatch = __webpack_require__(75);
-const proto = __webpack_require__(9);
+const proto = __webpack_require__(10);
 const UUID = __webpack_require__(71);
-const Is = __webpack_require__(7);
+const Is = __webpack_require__(8);
 function ensure(target, key) {
     if (target[key] === void 0) {
         target[key] = {};
@@ -16400,9 +16417,9 @@ NotebookDocumentSyncFeature.CellScheme = 'vscode-notebook-cell';
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SyncConfigurationFeature = exports.toJSONObject = exports.ConfigurationFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
-const Is = __webpack_require__(7);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
+const Is = __webpack_require__(8);
 const UUID = __webpack_require__(71);
 const features_1 = __webpack_require__(73);
 /**
@@ -16616,8 +16633,8 @@ exports.SyncConfigurationFeature = SyncConfigurationFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DidSaveTextDocumentFeature = exports.WillSaveWaitUntilFeature = exports.WillSaveFeature = exports.DidChangeTextDocumentFeature = exports.DidCloseTextDocumentFeature = exports.DidOpenTextDocumentFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
 class DidOpenTextDocumentFeature extends features_1.TextDocumentEventFeature {
@@ -17025,8 +17042,8 @@ exports.DidSaveTextDocumentFeature = DidSaveTextDocumentFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CompletionItemFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
 const SupportedCompletionItemKinds = [
@@ -17158,8 +17175,8 @@ exports.CompletionItemFeature = CompletionItemFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HoverFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
 class HoverFeature extends features_1.TextDocumentLanguageFeature {
@@ -17223,8 +17240,8 @@ exports.HoverFeature = HoverFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DefinitionFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
 class DefinitionFeature extends features_1.TextDocumentLanguageFeature {
@@ -17285,8 +17302,8 @@ exports.DefinitionFeature = DefinitionFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SignatureHelpFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
 class SignatureHelpFeature extends features_1.TextDocumentLanguageFeature {
@@ -17363,8 +17380,8 @@ exports.SignatureHelpFeature = SignatureHelpFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentHighlightFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
 class DocumentHighlightFeature extends features_1.TextDocumentLanguageFeature {
@@ -17420,8 +17437,8 @@ exports.DocumentHighlightFeature = DocumentHighlightFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentSymbolFeature = exports.SupportedSymbolTags = exports.SupportedSymbolKinds = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
 exports.SupportedSymbolKinds = [
@@ -17531,8 +17548,8 @@ exports.DocumentSymbolFeature = DocumentSymbolFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkspaceSymbolFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 const documentSymbol_1 = __webpack_require__(87);
 const UUID = __webpack_require__(71);
@@ -17617,8 +17634,8 @@ exports.WorkspaceSymbolFeature = WorkspaceSymbolFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ReferencesFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
 class ReferencesFeature extends features_1.TextDocumentLanguageFeature {
@@ -17677,8 +17694,8 @@ exports.ReferencesFeature = ReferencesFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CodeActionFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const UUID = __webpack_require__(71);
 const features_1 = __webpack_require__(73);
 class CodeActionFeature extends features_1.TextDocumentLanguageFeature {
@@ -17783,8 +17800,8 @@ exports.CodeActionFeature = CodeActionFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CodeLensFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const UUID = __webpack_require__(71);
 const features_1 = __webpack_require__(73);
 class CodeLensFeature extends features_1.TextDocumentLanguageFeature {
@@ -17868,8 +17885,8 @@ exports.CodeLensFeature = CodeLensFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentOnTypeFormattingFeature = exports.DocumentRangeFormattingFeature = exports.DocumentFormattingFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const UUID = __webpack_require__(71);
 const features_1 = __webpack_require__(73);
 var FileFormattingOptions;
@@ -18057,10 +18074,10 @@ exports.DocumentOnTypeFormattingFeature = DocumentOnTypeFormattingFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RenameFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const UUID = __webpack_require__(71);
-const Is = __webpack_require__(7);
+const Is = __webpack_require__(8);
 const features_1 = __webpack_require__(73);
 class RenameFeature extends features_1.TextDocumentLanguageFeature {
     constructor(client) {
@@ -18177,8 +18194,8 @@ exports.RenameFeature = RenameFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentLinkFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
 class DocumentLinkFeature extends features_1.TextDocumentLanguageFeature {
@@ -18255,8 +18272,8 @@ exports.DocumentLinkFeature = DocumentLinkFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExecuteCommandFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const UUID = __webpack_require__(71);
 const features_1 = __webpack_require__(73);
 class ExecuteCommandFeature {
@@ -18334,8 +18351,8 @@ exports.ExecuteCommandFeature = ExecuteCommandFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FileSystemWatcherFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 class FileSystemWatcherFeature {
     constructor(client, notifyFileEvent) {
@@ -18436,8 +18453,8 @@ exports.FileSystemWatcherFeature = FileSystemWatcherFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ColorProviderFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 class ColorProviderFeature extends features_1.TextDocumentLanguageFeature {
     constructor(client) {
@@ -18517,8 +18534,8 @@ exports.ColorProviderFeature = ColorProviderFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ImplementationFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 class ImplementationFeature extends features_1.TextDocumentLanguageFeature {
     constructor(client) {
@@ -18578,8 +18595,8 @@ exports.ImplementationFeature = ImplementationFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TypeDefinitionFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 class TypeDefinitionFeature extends features_1.TextDocumentLanguageFeature {
     constructor(client) {
@@ -18641,8 +18658,8 @@ exports.TypeDefinitionFeature = TypeDefinitionFeature;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkspaceFoldersFeature = exports.arrayDiff = void 0;
 const UUID = __webpack_require__(71);
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 function access(target, key) {
     if (target === undefined || target === null) {
         return undefined;
@@ -18795,8 +18812,8 @@ exports.WorkspaceFoldersFeature = WorkspaceFoldersFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FoldingRangeFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 class FoldingRangeFeature extends features_1.TextDocumentLanguageFeature {
     constructor(client) {
@@ -18867,8 +18884,8 @@ exports.FoldingRangeFeature = FoldingRangeFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DeclarationFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 class DeclarationFeature extends features_1.TextDocumentLanguageFeature {
     constructor(client) {
@@ -18928,8 +18945,8 @@ exports.DeclarationFeature = DeclarationFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SelectionRangeFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 class SelectionRangeFeature extends features_1.TextDocumentLanguageFeature {
     constructor(client) {
@@ -18992,7 +19009,7 @@ exports.SelectionRangeFeature = SelectionRangeFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProgressFeature = void 0;
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const progressPart_1 = __webpack_require__(72);
 function ensure(target, key) {
     if (target[key] === void 0) {
@@ -19043,8 +19060,8 @@ exports.ProgressFeature = ProgressFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CallHierarchyFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 class CallHierarchyProvider {
     constructor(client) {
@@ -19147,10 +19164,10 @@ exports.CallHierarchyFeature = CallHierarchyFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SemanticTokensFeature = void 0;
-const vscode = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
-const Is = __webpack_require__(7);
+const Is = __webpack_require__(8);
 class SemanticTokensFeature extends features_1.TextDocumentLanguageFeature {
     constructor(client) {
         super(client, vscode_languageserver_protocol_1.SemanticTokensRegistrationType.type);
@@ -19333,9 +19350,9 @@ exports.SemanticTokensFeature = SemanticTokensFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WillDeleteFilesFeature = exports.WillRenameFilesFeature = exports.WillCreateFilesFeature = exports.DidDeleteFilesFeature = exports.DidRenameFilesFeature = exports.DidCreateFilesFeature = void 0;
-const code = __webpack_require__(2);
+const code = __webpack_require__(1);
 const minimatch = __webpack_require__(75);
-const proto = __webpack_require__(9);
+const proto = __webpack_require__(10);
 const UUID = __webpack_require__(71);
 function ensure(target, key) {
     if (target[key] === void 0) {
@@ -19673,8 +19690,8 @@ exports.WillDeleteFilesFeature = WillDeleteFilesFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LinkedEditingFeature = void 0;
-const code = __webpack_require__(2);
-const proto = __webpack_require__(9);
+const code = __webpack_require__(1);
+const proto = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 class LinkedEditingFeature extends features_1.TextDocumentLanguageFeature {
     constructor(client) {
@@ -19733,8 +19750,8 @@ exports.LinkedEditingFeature = LinkedEditingFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TypeHierarchyFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 class TypeHierarchyProvider {
     constructor(client) {
@@ -19836,8 +19853,8 @@ exports.TypeHierarchyFeature = TypeHierarchyFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InlineValueFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 class InlineValueFeature extends features_1.TextDocumentLanguageFeature {
     constructor(client) {
@@ -19908,8 +19925,8 @@ exports.InlineValueFeature = InlineValueFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InlayHintsFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 class InlayHintsFeature extends features_1.TextDocumentLanguageFeature {
     constructor(client) {
@@ -20007,8 +20024,8 @@ exports.InlayHintsFeature = InlayHintsFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InlineCompletionItemFeature = void 0;
-const vscode_1 = __webpack_require__(2);
-const vscode_languageserver_protocol_1 = __webpack_require__(9);
+const vscode_1 = __webpack_require__(1);
+const vscode_languageserver_protocol_1 = __webpack_require__(10);
 const features_1 = __webpack_require__(73);
 const UUID = __webpack_require__(71);
 class InlineCompletionItemFeature extends features_1.TextDocumentLanguageFeature {
@@ -20068,8 +20085,8 @@ exports.InlineCompletionItemFeature = InlineCompletionItemFeature;
  * ------------------------------------------------------------------------------------------ */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.terminate = void 0;
-const cp = __webpack_require__(1);
-const path_1 = __webpack_require__(6);
+const cp = __webpack_require__(5);
+const path_1 = __webpack_require__(7);
 const isWindows = (process.platform === 'win32');
 const isMacintosh = (process.platform === 'darwin');
 const isLinux = (process.platform === 'linux');
@@ -20121,7 +20138,7 @@ exports.terminate = terminate;
  * ----------------------------------------------------------------------------------------- */
 
 
-module.exports = __webpack_require__(9);
+module.exports = __webpack_require__(10);
 
 /***/ }),
 /* 115 */
@@ -21776,12 +21793,12 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DiagnosticPullMode = exports.vsdiag = void 0;
-__exportStar(__webpack_require__(9), exports);
+__exportStar(__webpack_require__(10), exports);
 __exportStar(__webpack_require__(73), exports);
 var diagnostic_1 = __webpack_require__(74);
 Object.defineProperty(exports, "vsdiag", ({ enumerable: true, get: function () { return diagnostic_1.vsdiag; } }));
 Object.defineProperty(exports, "DiagnosticPullMode", ({ enumerable: true, get: function () { return diagnostic_1.DiagnosticPullMode; } }));
-__exportStar(__webpack_require__(8), exports);
+__exportStar(__webpack_require__(9), exports);
 
 
 /***/ })

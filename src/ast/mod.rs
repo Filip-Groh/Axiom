@@ -3,7 +3,7 @@ pub use crate::ast::nodes::*;
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::Location;
+use crate::error::location::{Location, Range};
 use crate::utils::SymbolTable;
 
 mod nodes;
@@ -39,19 +39,19 @@ impl Node {
         }
     }
 
-    pub fn location(&self) -> &Location {
+    pub fn location(&self) -> Range {
         match &self {
-            Node::File(file_node) => &file_node.location,
-            Node::Number(number_node) => &number_node.location,
-            Node::Identifier(identifier_node) => &identifier_node.location,
-            Node::BinaryOperation(binary_operation_node) => &binary_operation_node.location,
-            Node::Assignment(assignment_node) => &assignment_node.location,
-            Node::Declaration(declaration_node) => &declaration_node.location,
-            Node::Scope(scope_node) => &scope_node.location,
-            Node::Function(function_node) => &function_node.location,
-            Node::Return(return_node) => &return_node.location,
-            Node::Call(call_node) => &call_node.location,
-            Node::Parameter(parameter_node) => &parameter_node.location,
+            Node::File(file_node) => file_node.location(),
+            Node::Number(number_node) => number_node.location(),
+            Node::Identifier(identifier_node) => identifier_node.location(),
+            Node::BinaryOperation(binary_operation_node) => binary_operation_node.location(),
+            Node::Assignment(assignment_node) => assignment_node.location(),
+            Node::Declaration(declaration_node) => declaration_node.location(),
+            Node::Scope(scope_node) => scope_node.location(),
+            Node::Function(function_node) => function_node.location(),
+            Node::Return(return_node) => return_node.location(),
+            Node::Call(call_node) => call_node.location(),
+            Node::Parameter(parameter_node) => parameter_node.location(),
         }
     }
 

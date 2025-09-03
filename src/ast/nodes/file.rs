@@ -1,18 +1,18 @@
 use crate::analyzer::Analyzer;
-use crate::ast::{FunctionNode};
+use crate::ast::{DeclarationNode, FunctionNode};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::Location;
+use crate::error::location::{Location, Range};
 use crate::utils::SymbolTable;
 
 pub struct FileNode {
-    pub location: Location,
+    location: Range,
     pub functions: Vec<Box<FunctionNode>>
 }
 
 impl FileNode {
-    pub fn new(location: Location, functions: Vec<Box<FunctionNode>>) -> FileNode {
+    pub fn new(location: Range, functions: Vec<Box<FunctionNode>>) -> FileNode {
         FileNode {
             location,
             functions
@@ -23,6 +23,12 @@ impl FileNode {
         for function in &self.functions {
             function.display(indent);
         }
+    }
+}
+
+impl Location for FileNode {
+    fn location(&self) -> Range {
+        self.location.clone()
     }
 }
 

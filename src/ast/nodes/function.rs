@@ -1,14 +1,14 @@
 use inkwell::types::{BasicMetadataTypeEnum};
 use crate::analyzer::Analyzer;
-use crate::ast::{IdentifierNode, ParameterNode, ScopeNode};
+use crate::ast::{FileNode, IdentifierNode, ParameterNode, ScopeNode};
 use crate::codegen::{CodeGen, CodeGenerator, FunctionContext};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::Location;
+use crate::error::location::{Location, Range};
 use crate::utils::SymbolTable;
 
 pub struct FunctionNode {
-    pub location: Location,
+    location: Range,
     pub data_type: DataType,
     pub identifier_node: Box<IdentifierNode>,
     pub parameters: Vec<Box<ParameterNode>>,
@@ -17,7 +17,7 @@ pub struct FunctionNode {
 }
 
 impl FunctionNode {
-    pub fn new(location: Location, identifier_node: Box<IdentifierNode>, parameters: Vec<Box<ParameterNode>>, type_node: Option<Box<IdentifierNode>>, scope: Box<ScopeNode>) -> FunctionNode {
+    pub fn new(location: Range, identifier_node: Box<IdentifierNode>, parameters: Vec<Box<ParameterNode>>, type_node: Option<Box<IdentifierNode>>, scope: Box<ScopeNode>) -> FunctionNode {
         FunctionNode {
             location,
             data_type: DataType::Function(vec![], Box::from(DataType::None)),
@@ -38,12 +38,18 @@ impl FunctionNode {
     }
 }
 
+impl Location for FunctionNode {
+    fn location(&self) -> Range {
+        self.location.clone()
+    }
+}
+
 impl Analyzer for FunctionNode {
     fn analyze(&mut self, symbol_table: &mut SymbolTable<String, DataType>, errors: &mut Vec<AxiomError>) {
         let already_exist = symbol_table.has(&self.identifier_node.identifier_token.name);
 
         if already_exist {
-            errors.push(AxiomError::DuplicatedIdentifier(self.identifier_node.location.clone(), self.identifier_node.identifier_token.name.clone()));
+            errors.push(AxiomError::DuplicatedIdentifier(self.identifier_node.location(), self.identifier_node.identifier_token.name.clone()));
         }
 
         let mut parameter_types = vec![];
@@ -60,11 +66,11 @@ impl Analyzer for FunctionNode {
                     if let DataType::Type(underlying_type) = data_type {
                         output_type = *underlying_type.clone();
                     } else {
-                        errors.push(AxiomError::NotAType(type_node.location.clone(), type_node.identifier_token.name.clone()));
+                        errors.push(AxiomError::NotAType(type_node.location(), type_node.identifier_token.name.clone()));
                     }
                 }
                 None => {
-                    errors.push(AxiomError::IdentifierUsedBeforeDeclaration(type_node.location.clone(), type_node.identifier_token.name.clone()));
+                    errors.push(AxiomError::IdentifierUsedBeforeDeclaration(type_node.location(), type_node.identifier_token.name.clone()));
                 }
             }
         }
@@ -81,7 +87,7 @@ impl Analyzer for FunctionNode {
             let already_exist = symbol_table.has(&parameter.identifier_node.identifier_token.name);
 
             if already_exist {
-                errors.push(AxiomError::DuplicatedIdentifier(parameter.location.clone(), parameter.identifier_node.identifier_token.name.clone()));
+                errors.push(AxiomError::DuplicatedIdentifier(parameter.location(), parameter.identifier_node.identifier_token.name.clone()));
             } else {
                 symbol_table.add(parameter.identifier_node.identifier_token.name.clone(), parameter.identifier_node.data_type.clone());
             }

@@ -3,17 +3,17 @@ use crate::ast::{IdentifierNode, Node};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::Location;
+use crate::error::location::{Location, Range};
 use crate::utils::SymbolTable;
 
 pub struct AssignmentNode {
-    pub location: Location,
+    location: Range,
     pub identifier_node: Box<IdentifierNode>,
     pub expression: Box<Node>,
 }
 
 impl AssignmentNode {
-    pub fn new(location: Location, identifier_node: Box<IdentifierNode>, expression: Box<Node>) -> AssignmentNode {
+    pub fn new(location: Range, identifier_node: Box<IdentifierNode>, expression: Box<Node>) -> AssignmentNode {
         AssignmentNode {
             location,
             identifier_node,
@@ -27,6 +27,12 @@ impl AssignmentNode {
     }
 }
 
+impl Location for AssignmentNode {
+    fn location(&self) -> Range {
+        self.location.clone()
+    }
+}
+
 impl Analyzer for AssignmentNode {
     fn analyze(&mut self, symbol_table: &mut SymbolTable<String, DataType>, errors: &mut Vec<AxiomError>) {
         self.expression.analyze(symbol_table, errors);
@@ -36,11 +42,11 @@ impl Analyzer for AssignmentNode {
         match symbol_table.get(&self.identifier_node.identifier_token.name) {
             Some(data_type) => {
                 if *expression_data_type != *data_type {
-                    errors.push(AxiomError::WrongDataType(self.expression.location().clone(), Box::from(data_type.clone()), Box::from(expression_data_type.clone())))
+                    errors.push(AxiomError::WrongDataType(self.expression.location(), Box::from(data_type.clone()), Box::from(expression_data_type.clone())))
                 }
             }
             None => {
-                errors.push(AxiomError::IdentifierUsedBeforeDeclaration(self.identifier_node.location.clone(), self.identifier_node.identifier_token.name.clone()));
+                errors.push(AxiomError::IdentifierUsedBeforeDeclaration(self.identifier_node.location(), self.identifier_node.identifier_token.name.clone()));
             }
         }
     }

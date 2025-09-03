@@ -1,14 +1,14 @@
-mod tests;
-
 use std::error::Error;
-use crate::error::location::Location;
+use crate::error::location::{Position, Range};
 use crate::token::{NumberToken, Token, IdentifierToken, OperatorToken, OperatorCategory, OperatorArithmeticType, OperatorAssignmentType, ParenthesesToken, ParenthesesType, ParenthesesState, KeywordToken, OperatorComparisonType, OperatorUnaryType, PunctuationToken, PunctuationType};
 
 pub struct Lexer{
     chars: Vec<char>,
     index: usize,
+    position: Position,
     current_char: Option<char>,
-    tokens: Vec<Token>
+    tokens: Vec<Token>,
+    is_next_char_on_new_line: bool,
 }
 
 impl Lexer {
@@ -18,8 +18,10 @@ impl Lexer {
         Lexer {
             current_char: chars.get(0).cloned(),
             index: 0,
+            position: Position::new(0, 0),
             tokens: Vec::new(),
-            chars
+            chars,
+            is_next_char_on_new_line: false,
         }
     }
     
@@ -30,6 +32,15 @@ impl Lexer {
     fn step(&mut self) {
         self.index += 1;
         self.current_char = self.chars.get(self.index).cloned();
+
+        if self.is_next_char_on_new_line {
+            self.position.column = 0;
+            self.position.line += 1;
+        } else {
+            self.position.column += 1;
+        }
+
+        self.is_next_char_on_new_line = self.current_char == Some('\n');
     }
     
     fn take(&mut self) -> Option<char> {
@@ -58,8 +69,7 @@ impl Lexer {
                 char if Lexer::is_parentheses(char) => self.parse_parentheses(),
                 char if Lexer::is_punctuation(char) => self.parse_punctuation(),
                 _ => {
-                    let location = Location::new(self.index, self.index);
-                    self.tokens.push(Token::Unknown(location, current_char));
+                    self.tokens.push(Token::Unknown(self.position.clone(), current_char));
                 }
             }
         }
@@ -68,7 +78,7 @@ impl Lexer {
     }
 
     fn parse_number(&mut self) {
-        let start_location = self.index;
+        let start_position = self.position.clone();
         let mut current_number = vec![self.current_char.unwrap()];
 
         loop {
@@ -83,13 +93,13 @@ impl Lexer {
             }
         }
         
-        let location = Location::new(start_location, self.index);
-        let number_token = NumberToken::new(String::from_iter(current_number));
-        self.tokens.push(Token::Number(location, number_token));
+        let location = Range::new(start_position, self.position.clone());
+        let number_token = NumberToken::new(String::from_iter(current_number), location);
+        self.tokens.push(Token::Number(number_token));
     }
     
     fn parse_identifier(&mut self) {
-        let start_location = self.index;
+        let start_position = self.position.clone();
         let mut current_identifier = self.current_char.unwrap().to_string();
     
         loop {
@@ -104,14 +114,14 @@ impl Lexer {
             }
         }
         
-        let location = Location::new(start_location, self.index);
+        let location = Range::new(start_position, self.position.clone());
         let keyword_type = KeywordToken::get_keyword_type(&current_identifier);
         match keyword_type {
             Some(keyword) => {
-                self.tokens.push(Token::Keyword(location, KeywordToken::new(keyword)));
+                self.tokens.push(Token::Keyword(KeywordToken::new(keyword, location)));
             }
             None => {
-                self.tokens.push(Token::Identifier(location, IdentifierToken::new(current_identifier)));
+                self.tokens.push(Token::Identifier(IdentifierToken::new(current_identifier, location)));
             }
         }
     }
@@ -125,99 +135,47 @@ impl Lexer {
 
     fn parse_operator(&mut self) {
         let current_operator = self.current_char.unwrap();
-        let start_location = self.index;
+        let start_position = self.position.clone();
         
         match current_operator {
             '+' => {
-                let mut token_type = OperatorCategory::Arithmetic(OperatorArithmeticType::Addition);
-                
-                if let Some(char) = self.peek() && char == '=' {
-                    self.step();
-                    token_type = OperatorCategory::Assignment(OperatorAssignmentType::AdditionAssignment);
-                }
-                
-                let location = Location::new(start_location, self.index);
-                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)));
+                self.parse_double_operator(start_position, '=', OperatorCategory::Arithmetic(OperatorArithmeticType::Addition), OperatorCategory::Assignment(OperatorAssignmentType::AdditionAssignment));
             }
             '-' => {
-                let mut token_type = OperatorCategory::Arithmetic(OperatorArithmeticType::Subtraction);
-
-                if let Some(char) = self.peek() && char == '=' {
-                    self.step();
-                    token_type = OperatorCategory::Assignment(OperatorAssignmentType::SubtractionAssignment);
-                }
-
-                let location = Location::new(start_location, self.index);
-                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)));
+                self.parse_double_operator(start_position, '=', OperatorCategory::Arithmetic(OperatorArithmeticType::Subtraction), OperatorCategory::Assignment(OperatorAssignmentType::SubtractionAssignment));
             }
             '*' => {
-                let mut token_type = OperatorCategory::Arithmetic(OperatorArithmeticType::Multiplication);
-
-                if let Some(char) = self.peek() && char == '=' {
-                    self.step();
-                    token_type = OperatorCategory::Assignment(OperatorAssignmentType::MultiplicationAssignment);
-                }
-
-                let location = Location::new(start_location, self.index);
-                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)));
+                self.parse_double_operator(start_position, '=', OperatorCategory::Arithmetic(OperatorArithmeticType::Multiplication), OperatorCategory::Assignment(OperatorAssignmentType::MultiplicationAssignment));
             }
             '/' => {
-                let mut token_type = OperatorCategory::Arithmetic(OperatorArithmeticType::Division);
-
-                if let Some(char) = self.peek() && char == '=' {
-                    self.step();
-                    token_type = OperatorCategory::Assignment(OperatorAssignmentType::DivisionAssignment);
-                }
-
-                let location = Location::new(start_location, self.index);
-                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)));
+                self.parse_double_operator(start_position, '=', OperatorCategory::Arithmetic(OperatorArithmeticType::Division), OperatorCategory::Assignment(OperatorAssignmentType::DivisionAssignment));
             }
             '=' => {
-                let mut token_type = OperatorCategory::Assignment(OperatorAssignmentType::Assignment);
-                
-                if let Some(char) = self.peek() && char == '=' {
-                    self.step();
-                    token_type = OperatorCategory::Comparison(OperatorComparisonType::Equal);
-                }
-                
-                let location = Location::new(start_location, self.index);
-                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)))
+                self.parse_double_operator(start_position, '=', OperatorCategory::Assignment(OperatorAssignmentType::Assignment), OperatorCategory::Comparison(OperatorComparisonType::Equal));
             }
             '!' => {
-                let mut token_type = OperatorCategory::Unary(OperatorUnaryType::Not);
-
-                if let Some(char) = self.peek() && char == '=' {
-                    self.step();
-                    token_type = OperatorCategory::Comparison(OperatorComparisonType::NotEqual);
-                }
-
-                let location = Location::new(start_location, self.index);
-                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)))
+                self.parse_double_operator(start_position, '=', OperatorCategory::Unary(OperatorUnaryType::Not), OperatorCategory::Comparison(OperatorComparisonType::NotEqual));
             }
             '>' => {
-                let mut token_type = OperatorCategory::Comparison(OperatorComparisonType::GreaterThan);
-
-                if let Some(char) = self.peek() && char == '=' {
-                    self.step();
-                    token_type = OperatorCategory::Comparison(OperatorComparisonType::GreaterThanOrEqual);
-                }
-
-                let location = Location::new(start_location, self.index);
-                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)))
+                self.parse_double_operator(start_position, '=', OperatorCategory::Comparison(OperatorComparisonType::GreaterThan), OperatorCategory::Comparison(OperatorComparisonType::GreaterThanOrEqual));
             }
             '<' => {
-                let mut token_type = OperatorCategory::Comparison(OperatorComparisonType::LessThan);
-
-                if let Some(char) = self.peek() && char == '=' {
-                    self.step();
-                    token_type = OperatorCategory::Comparison(OperatorComparisonType::LessThanOrEqual);
-                }
-
-                let location = Location::new(start_location, self.index);
-                self.tokens.push(Token::Operator(location, OperatorToken::new(token_type)))
+                self.parse_double_operator(start_position, '=', OperatorCategory::Comparison(OperatorComparisonType::LessThan), OperatorCategory::Comparison(OperatorComparisonType::LessThanOrEqual));
             }
             _ => ()
         }
+    }
+    
+    fn parse_double_operator(&mut self, start_position: Position, second_char: char, singe_operator_type: OperatorCategory, double_operator_type: OperatorCategory) {
+        let mut token_type = singe_operator_type;
+
+        if let Some(char) = self.peek() && char == second_char {
+            self.step();
+            token_type = double_operator_type;
+        }
+
+        let location = Range::new(start_position, self.position.clone());
+        self.tokens.push(Token::Operator(OperatorToken::new(token_type, location)))
     }
     
     fn is_parentheses(current_char: char) -> bool {
@@ -229,20 +187,19 @@ impl Lexer {
     
     fn parse_parentheses(&mut self) {
         let current_parentheses = self.current_char.unwrap();
-        let location = Location::new(self.index, self.index);
         
         match current_parentheses {
             '(' => {
-                self.tokens.push(Token::Parentheses(location, ParenthesesToken::new(ParenthesesType::Round(ParenthesesState::Opening))))
+                self.tokens.push(Token::Parentheses(ParenthesesToken::new(ParenthesesType::Round(ParenthesesState::Opening), self.position.clone())));
             }
             ')' => {
-                self.tokens.push(Token::Parentheses(location, ParenthesesToken::new(ParenthesesType::Round(ParenthesesState::Closing))))
+                self.tokens.push(Token::Parentheses(ParenthesesToken::new(ParenthesesType::Round(ParenthesesState::Closing), self.position.clone())))
             }
             '{' => {
-                self.tokens.push(Token::Parentheses(location, ParenthesesToken::new(ParenthesesType::Curly(ParenthesesState::Opening))))
+                self.tokens.push(Token::Parentheses(ParenthesesToken::new(ParenthesesType::Curly(ParenthesesState::Opening), self.position.clone())))
             }
             '}' => {
-                self.tokens.push(Token::Parentheses(location, ParenthesesToken::new(ParenthesesType::Curly(ParenthesesState::Closing))))
+                self.tokens.push(Token::Parentheses(ParenthesesToken::new(ParenthesesType::Curly(ParenthesesState::Closing), self.position.clone())))
             }
             _ => ()
         }
@@ -257,14 +214,13 @@ impl Lexer {
     
     fn parse_punctuation(&mut self) {
         let current_punctuation = self.current_char.unwrap();
-        let location = Location::new(self.index, self.index);
         
         match current_punctuation {
             ',' => {
-                self.tokens.push(Token::Punctuation(location, PunctuationToken::new(PunctuationType::Comma)))
+                self.tokens.push(Token::Punctuation(PunctuationToken::new(PunctuationType::Comma, self.position.clone())))
             }
             ':' => {
-                self.tokens.push(Token::Punctuation(location, PunctuationToken::new(PunctuationType::Colon)))
+                self.tokens.push(Token::Punctuation(PunctuationToken::new(PunctuationType::Colon, self.position.clone())))
             }
             _ => ()
         }

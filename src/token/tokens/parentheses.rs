@@ -1,3 +1,6 @@
+use crate::error::location::{Location, Position, Range};
+use crate::token::IdentifierToken;
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum ParenthesesState {
     Opening,
@@ -12,13 +15,24 @@ pub enum ParenthesesType {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ParenthesesToken {
-    pub parentheses_type: ParenthesesType
+    pub parentheses_type: ParenthesesType,
+    location: Position
 }
 
 impl ParenthesesToken {
-    pub fn new(parentheses_type: ParenthesesType) -> ParenthesesToken {
+    pub fn new(parentheses_type: ParenthesesType, location: Position) -> ParenthesesToken {
         ParenthesesToken {
-            parentheses_type
+            parentheses_type,
+            location
+        }
+    }
+}
+
+impl Location for ParenthesesToken {
+    fn location(&self) -> Range {
+        Range {
+            start: self.location.clone(),
+            end: self.location.clone()
         }
     }
 }

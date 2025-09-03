@@ -15,7 +15,15 @@
       "patterns": [
         {
           "name": "keyword.control.axiom",
-          "match": "\\b(function|return)\\b"
+          "match": "\\b(return)\\b"
+        },
+        {
+          "name": "keyword.declaration.axiom",
+          "match": "\\b(function|let)\\b"
+        },
+        {
+          "name": "entity.name.type.axiom",
+          "match": "\\b(i32|bool)\\b"
         }
       ]
     }

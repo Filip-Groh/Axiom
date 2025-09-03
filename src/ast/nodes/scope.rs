@@ -1,18 +1,18 @@
 use crate::analyzer::Analyzer;
-use crate::ast::{Node};
+use crate::ast::{Node, ParameterNode};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::Location;
+use crate::error::location::{Location, Range};
 use crate::utils::SymbolTable;
 
 pub struct ScopeNode {
-    pub location: Location,
+    location: Range,
     pub statements: Vec<Box<Node>>
 }
 
 impl ScopeNode {
-    pub fn new(location: Location, statements: Vec<Box<Node>>) -> ScopeNode {
+    pub fn new(location: Range, statements: Vec<Box<Node>>) -> ScopeNode {
         ScopeNode {
             location,
             statements
@@ -25,6 +25,12 @@ impl ScopeNode {
             statement.display(indent + 1);
         }
         println!("{}}}", " ".repeat(indent * 4));
+    }
+}
+
+impl Location for ScopeNode {
+    fn location(&self) -> Range {
+        self.location.clone()
     }
 }
 

@@ -1,10 +1,11 @@
-import { exec, spawn } from 'child_process'
 import * as vscode from 'vscode'
+import * as net from "net"
 
 import {
   LanguageClient,
   LanguageClientOptions,
   ServerOptions,
+  StreamInfo,
   TransportKind,
 } from 'vscode-languageclient/node'
 
@@ -35,9 +36,28 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(disposable)
 
-	let serverOptions: ServerOptions = {
-		command: "/mnt/d/Projects/Axiom/target/debug/Axiom",
-		args: ["lsp"],
+	// let serverOptions: ServerOptions = {
+	// 	command: "/mnt/d/Projects/Axiom/target/debug/Axiom",
+	// 	args: ["lsp"],
+	// }
+
+	const serverOptions = () => {
+		return new Promise<StreamInfo>((resolve, reject) => {
+			const socket = net.connect({ port: 9999 })
+
+			socket.on('error', (err) => {
+				vscode.window.showErrorMessage(`Failed to connect to language server: ${err.message}`)
+				reject(err)
+			})
+
+			socket.on('connect', () => {
+				console.log('Successfully connected to Axiom LSP on port 9999.')
+				resolve({
+					writer: socket,
+					reader: socket
+				})
+			})
+		})
 	}
 
 	let clientOptions: LanguageClientOptions = {

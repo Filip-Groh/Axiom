@@ -1,3 +1,6 @@
+use crate::error::location::{Location, Range};
+use crate::token::IdentifierToken;
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum OperatorCategory {
     Arithmetic(OperatorArithmeticType),
@@ -44,12 +47,20 @@ pub enum OperatorUnaryType {
 #[derive(Debug, PartialEq, Clone)]
 pub struct OperatorToken {
     pub operator_type: OperatorCategory,
+    location: Range
 }
 
 impl OperatorToken {
-    pub fn new(operator_type: OperatorCategory) -> OperatorToken {
+    pub fn new(operator_type: OperatorCategory, location: Range) -> OperatorToken {
         OperatorToken {
-            operator_type
+            operator_type,
+            location
         }
+    }
+}
+
+impl Location for OperatorToken {
+    fn location(&self) -> Range {
+        self.location.clone()
     }
 }

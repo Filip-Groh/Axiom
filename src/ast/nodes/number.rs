@@ -1,19 +1,20 @@
 use crate::analyzer::Analyzer;
+use crate::ast::IdentifierNode;
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::Location;
+use crate::error::location::{Location, Range};
 use crate::token::{NumberToken};
 use crate::utils::SymbolTable;
 
 pub struct NumberNode {
-    pub location: Location,
+    location: Range,
     pub data_type: DataType,
     pub number_token: NumberToken
 }
 
 impl NumberNode {
-    pub fn new(location: Location, number_token: NumberToken) -> NumberNode {
+    pub fn new(location: Range, number_token: NumberToken) -> NumberNode {
         NumberNode {
             location,
             data_type: DataType::I32,
@@ -23,6 +24,12 @@ impl NumberNode {
     
     pub fn display(&self, indent: usize) {
         println!("{}- {}", " ".repeat(indent * 4), self.number_token.value);
+    }
+}
+
+impl Location for NumberNode {
+    fn location(&self) -> Range {
+        self.location.clone()
     }
 }
 

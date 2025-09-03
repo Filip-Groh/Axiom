@@ -1,18 +1,18 @@
 use crate::analyzer::Analyzer;
-use crate::ast::{Node};
+use crate::ast::{Node, ParameterNode};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::Location;
+use crate::error::location::{Location, Range};
 use crate::utils::SymbolTable;
 
 pub struct ReturnNode {
-    pub location: Location,
+    location: Range,
     pub expression: Box<Node>,
 }
 
 impl ReturnNode {
-    pub fn new(location: Location, expression: Box<Node>) -> ReturnNode {
+    pub fn new(location: Range, expression: Box<Node>) -> ReturnNode {
         ReturnNode { 
             location,
             expression
@@ -25,6 +25,12 @@ impl ReturnNode {
     }
 }
 
+impl Location for ReturnNode {
+    fn location(&self) -> Range {
+        self.location.clone()
+    }
+}
+
 impl Analyzer for ReturnNode {
     fn analyze(&mut self, symbol_table: &mut SymbolTable<String, DataType>, errors: &mut Vec<AxiomError>) {
         self.expression.analyze(symbol_table, errors);
@@ -34,10 +40,10 @@ impl Analyzer for ReturnNode {
         match symbol_table.get(&"return".to_string()) {
             Some(function_return_type) => {
                 if *expression_data_type != *function_return_type {
-                    errors.push(AxiomError::WrongDataType(self.expression.location().clone(), Box::from(function_return_type.clone()), Box::from(expression_data_type.clone())))
+                    errors.push(AxiomError::WrongDataType(self.expression.location(), Box::from(function_return_type.clone()), Box::from(expression_data_type.clone())))
                 }
             }
-            None => errors.push(AxiomError::WrongDataType(self.expression.location().clone(), Box::from(DataType::None), Box::from(expression_data_type.clone())))
+            None => errors.push(AxiomError::WrongDataType(self.expression.location(), Box::from(DataType::None), Box::from(expression_data_type.clone())))
         }
     }
 }

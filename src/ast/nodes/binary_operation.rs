@@ -1,10 +1,10 @@
 use inkwell::IntPredicate;
 use crate::analyzer::Analyzer;
-use crate::ast::{Node};
+use crate::ast::{AssignmentNode, Node};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::Location;
+use crate::error::location::{Location, Range};
 use crate::utils::SymbolTable;
 
 #[derive(Debug)]
@@ -22,7 +22,7 @@ pub enum BinaryOperationType {
 }
 
 pub struct BinaryOperationNode {
-    pub location: Location,
+    location: Range,
     pub data_type: DataType,
     pub left: Box<Node>,
     pub right: Box<Node>,
@@ -30,7 +30,7 @@ pub struct BinaryOperationNode {
 }
 
 impl BinaryOperationNode {
-    pub fn new(location: Location, left: Box<Node>, right: Box<Node>, operation_type: BinaryOperationType) -> BinaryOperationNode {
+    pub fn new(location: Range, left: Box<Node>, right: Box<Node>, operation_type: BinaryOperationType) -> BinaryOperationNode {
         BinaryOperationNode {
             location,
             data_type: DataType::ToBeInferred,
@@ -47,6 +47,12 @@ impl BinaryOperationNode {
     }
 }
 
+impl Location for BinaryOperationNode {
+    fn location(&self) -> Range {
+        self.location.clone()
+    }
+}
+
 impl Analyzer for BinaryOperationNode {
     fn analyze(&mut self, symbol_table: &mut SymbolTable<String, DataType>, errors: &mut Vec<AxiomError>) {
         self.left.analyze(symbol_table, errors);
@@ -56,7 +62,7 @@ impl Analyzer for BinaryOperationNode {
         let right_data_type = self.right.data_type();
 
         if *right_data_type != *left_data_type {
-            errors.push(AxiomError::WrongDataType(self.right.location().clone(), Box::from(left_data_type.clone()), Box::from(right_data_type.clone())))
+            errors.push(AxiomError::WrongDataType(self.right.location(), Box::from(left_data_type.clone()), Box::from(right_data_type.clone())))
         }
 
         match self.operation_type {

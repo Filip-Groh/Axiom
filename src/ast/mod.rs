@@ -16,6 +16,7 @@ pub enum Node {
     Return(ReturnNode),
     Declaration(DeclarationNode),
     Assignment(AssignmentNode),
+    Ternary(TernaryNode),
     BinaryOperation(BinaryOperationNode),
     Number(NumberNode),
     Identifier(IdentifierNode),
@@ -36,6 +37,7 @@ impl Node {
             Node::Return(return_node) => return_node.display(indent),
             Node::Call(call_node) => call_node.display(indent),
             Node::Parameter(parameter_node) => parameter_node.display(indent),
+            Node::Ternary(ternary_node) => ternary_node.display(indent),
         }
     }
 
@@ -52,6 +54,7 @@ impl Node {
             Node::Return(return_node) => return_node.location(),
             Node::Call(call_node) => call_node.location(),
             Node::Parameter(parameter_node) => parameter_node.location(),
+            Node::Ternary(ternary_node) => ternary_node.location(),
         }
     }
 
@@ -68,6 +71,7 @@ impl Node {
             Node::Return(return_node) => &DataType::None,
             Node::Call(call_node) => &call_node.data_type,
             Node::Parameter(parameter_node) => &DataType::None,
+            Node::Ternary(ternary_node) => &ternary_node.data_type,
         }
     }
 }
@@ -86,6 +90,7 @@ impl Analyzer for Node {
             Node::Return(return_node) => return_node.analyze(symbol_table, errors),
             Node::Call(call_node) => call_node.analyze(symbol_table, errors),
             Node::Parameter(parameter_node) => parameter_node.analyze(symbol_table, errors),
+            Node::Ternary(ternary_node) => ternary_node.analyze(symbol_table, errors),
         }
     }
 }
@@ -104,6 +109,7 @@ impl CodeGen for Node {
             Node::Return(return_node) => return_node.build(code_generator),
             Node::Call(call_node) => call_node.build(code_generator),
             Node::Parameter(parameter_node) => parameter_node.build(code_generator),
+            Node::Ternary(ternary_node) => ternary_node.build(code_generator),
         }
     }
 }

@@ -56,11 +56,12 @@ impl Analyzer for CallNode {
                         let function_parameter = parameter_data_types.get(i);
 
                         if call_parameter.is_none() || function_parameter.is_none() {
-                            errors.push(AxiomError::MismatchedNumberOfParameters(Range::from_ranges(self.parameters.iter().map(|param| {param.location()}).collect()), self.identifier_node.identifier_token.name.clone(), parameter_data_types.len(), self.parameters.len()))
+                            errors.push(AxiomError::MismatchedNumberOfParameters(self.location.clone(), self.identifier_node.identifier_token.name.clone(), parameter_data_types.len(), self.parameters.len()));
+                            break;
                         }
 
                         if *call_parameter.unwrap().data_type() != *function_parameter.unwrap() {
-                            errors.push(AxiomError::WrongDataType(call_parameter.unwrap().location(), Box::from(function_parameter.unwrap().clone()), Box::from(call_parameter.unwrap().data_type().clone())))
+                            errors.push(AxiomError::WrongDataType(call_parameter.unwrap().location(), Box::from(function_parameter.unwrap().clone()), Box::from(call_parameter.unwrap().data_type().clone())));
                         }
                     }
 

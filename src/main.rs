@@ -113,6 +113,9 @@ fn run(path_buf: PathBuf) -> Result<(), Vec<Box<dyn Error>>> {
     let mut codegen = CodeGenerator::new(&context);
     ast.build(&mut codegen);
 
+    println!("LLVM IR: ");
+    println!("{}", codegen.to_string());
+
     if let Err(error) = Target::initialize_native(&InitializationConfig::default()) {
         return Err(vec![Box::from(error)])
     }

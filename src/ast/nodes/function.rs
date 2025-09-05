@@ -128,8 +128,8 @@ impl CodeGen for FunctionNode {
             parameter_names: self.parameters.iter().map(|parameter| {parameter.identifier_node.identifier_token.name.clone()}).collect(),
         });
 
-        let basic_block = code_generator.context.append_basic_block(function, "entry");
-        code_generator.builder.position_at_end(basic_block);
+        let entry_block = code_generator.context.append_basic_block(function, "entry");
+        code_generator.builder.position_at_end(entry_block);
 
         code_generator.variables.push();
 

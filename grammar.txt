@@ -21,7 +21,10 @@ Syntax:
     / OPERATOR["/="] Expression
     
 - Expression 
-    = Equality
+    = Ternary
+
+- Ternary
+    = Equality (PUNCTUATION["?"] Expression PUNCTUATION[":"] Expression)?
 
 - Equality
    = Additive ((OPERATOR["=="] / OPERATOR["!="] / OPERATOR[">"] / OPERATOR[">="] / OPERATOR["<"] / OPERATOR["<="]) Additive)*
@@ -44,4 +47,4 @@ Tokens:
 - KEYWORD["LET", "FUNCTION", "RETURN"]
 - OPERATOR["+", "-", "*", "/", "=", "+=", "-=", "*=", "/=", "==", "!=", ">", ">=", "<", "<="]
 - PARENTHESES["(", ")", "{", "}"]
-- PUNCTUATION[",", ":"]
+- PUNCTUATION[",", ":", "?"]

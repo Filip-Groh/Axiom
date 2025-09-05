@@ -1,10 +1,10 @@
 use crate::error::location::{Location, Position, Range};
-use crate::token::IdentifierToken;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum PunctuationType {
     Comma,
-    Colon
+    Colon,
+    QuestionMark
 }
 
 #[derive(Debug, PartialEq, Clone)]

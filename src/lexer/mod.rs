@@ -207,7 +207,7 @@ impl Lexer {
     
     fn is_punctuation(current_char: char) -> bool {
         match current_char {
-            ',' | ':' => true,
+            ',' | ':' | '?' => true,
             _ => false
         }
     }
@@ -221,6 +221,9 @@ impl Lexer {
             }
             ':' => {
                 self.tokens.push(Token::Punctuation(PunctuationToken::new(PunctuationType::Colon, self.position.clone())))
+            }
+            '?' => {
+                self.tokens.push(Token::Punctuation(PunctuationToken::new(PunctuationType::QuestionMark, self.position.clone())))
             }
             _ => ()
         }

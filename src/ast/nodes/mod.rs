@@ -9,6 +9,7 @@ mod r#return;
 mod declaration;
 mod call;
 mod parameter;
+mod ternary;
 
 pub use number::*;
 pub use binary_operation::*;
@@ -21,3 +22,4 @@ pub use r#return::*;
 pub use declaration::*;
 pub use call::*;
 pub use parameter::*;
+pub use ternary::*;

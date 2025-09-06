@@ -1,11 +1,12 @@
 use crate::error::location::{Location, Range};
-use crate::token::IdentifierToken;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum KeywordType {
     Let,
     Function,
-    Return
+    Return,
+    If,
+    Else,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -27,6 +28,8 @@ impl KeywordToken {
             "let" => Some(KeywordType::Let),
             "function" => Some(KeywordType::Function),
             "return" => Some(KeywordType::Return),
+            "if" => Some(KeywordType::If),
+            "else" => Some(KeywordType::Else),
             _ => None,
         }
     }

@@ -15,7 +15,7 @@
       "patterns": [
         {
           "name": "keyword.control.axiom",
-          "match": "\\b(return)\\b"
+          "match": "\\b(return|if|else)\\b"
         },
         {
           "name": "keyword.declaration.axiom",

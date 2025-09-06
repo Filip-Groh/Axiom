@@ -12,6 +12,7 @@ Syntax:
     = KEYWORD["LET"] IDENTIFIER OPERATOR["="] Expression
     / IDENTIFIER Assignment
     / KEYWORD["RETURN"] Expression
+    / KEYWORD["IF"] Expression Scope (KEYWORD["ELSE"] KEYWORD["IF"] Expression Scope)* (KEYWORD["ELSE"] Scope)?
 
 - Assignment
     = OPERATOR["="] Expression
@@ -44,7 +45,7 @@ Syntax:
 Tokens:
 - NUMBER
 - IDENTIFIER
-- KEYWORD["LET", "FUNCTION", "RETURN"]
+- KEYWORD["LET", "FUNCTION", "RETURN", "IF", "ELSE"]
 - OPERATOR["+", "-", "*", "/", "=", "+=", "-=", "*=", "/=", "==", "!=", ">", ">=", "<", "<="]
 - PARENTHESES["(", ")", "{", "}"]
 - PUNCTUATION[",", ":", "?"]

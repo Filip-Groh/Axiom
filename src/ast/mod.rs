@@ -13,6 +13,7 @@ pub enum Node {
     Function(FunctionNode),
     Parameter(ParameterNode),
     Scope(ScopeNode),
+    IfElse(IfElseNode),
     Return(ReturnNode),
     Declaration(DeclarationNode),
     Assignment(AssignmentNode),
@@ -38,6 +39,7 @@ impl Node {
             Node::Call(call_node) => call_node.display(indent),
             Node::Parameter(parameter_node) => parameter_node.display(indent),
             Node::Ternary(ternary_node) => ternary_node.display(indent),
+            Node::IfElse(if_else_node) => if_else_node.display(indent),
         }
     }
 
@@ -55,6 +57,7 @@ impl Node {
             Node::Call(call_node) => call_node.location(),
             Node::Parameter(parameter_node) => parameter_node.location(),
             Node::Ternary(ternary_node) => ternary_node.location(),
+            Node::IfElse(if_else_node) => if_else_node.location(),
         }
     }
 
@@ -72,6 +75,7 @@ impl Node {
             Node::Call(call_node) => &call_node.data_type,
             Node::Parameter(parameter_node) => &DataType::None,
             Node::Ternary(ternary_node) => &ternary_node.data_type,
+            Node::IfElse(_) => &DataType::None,
         }
     }
 }
@@ -91,6 +95,7 @@ impl Analyzer for Node {
             Node::Call(call_node) => call_node.analyze(symbol_table, errors),
             Node::Parameter(parameter_node) => parameter_node.analyze(symbol_table, errors),
             Node::Ternary(ternary_node) => ternary_node.analyze(symbol_table, errors),
+            Node::IfElse(if_else_node) => if_else_node.analyze(symbol_table, errors),
         }
     }
 }
@@ -110,6 +115,7 @@ impl CodeGen for Node {
             Node::Call(call_node) => call_node.build(code_generator),
             Node::Parameter(parameter_node) => parameter_node.build(code_generator),
             Node::Ternary(ternary_node) => ternary_node.build(code_generator),
+            Node::IfElse(if_else_node) => if_else_node.build(code_generator),
         }
     }
 }

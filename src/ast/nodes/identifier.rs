@@ -1,6 +1,5 @@
 use inkwell::values::IntValue;
 use crate::analyzer::Analyzer;
-use crate::ast::FunctionNode;
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;

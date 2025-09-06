@@ -98,11 +98,9 @@ fn run(path_buf: PathBuf) -> Result<(), Vec<Box<dyn Error>>> {
     ast.display(0);
 
     let mut symbol_table = SymbolTable::new();
+    symbol_table.add_build_in_types();
+    
     let mut errors = vec![];
-
-    symbol_table.add("i32".to_string(), DataType::Type(Box::from(DataType::I32)));
-    symbol_table.add("bool".to_string(), DataType::Type(Box::from(DataType::Bool)));
-    // Add build-in functions here!
 
     ast.analyze(&mut symbol_table, &mut errors);
     if errors.len() > 0 {

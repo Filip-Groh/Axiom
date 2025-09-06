@@ -226,11 +226,9 @@ fn analyze_for_errors(content: &String) -> Vec<AxiomError> {
     };
 
     let mut symbol_table = SymbolTable::new();
-    let mut errors = vec![];
+    symbol_table.add_build_in_types();
 
-    symbol_table.add("i32".to_string(), DataType::Type(Box::from(DataType::I32)));
-    symbol_table.add("bool".to_string(), DataType::Type(Box::from(DataType::Bool)));
-    // Add build-in functions here!
+    let mut errors = vec![];
 
     ast.analyze(&mut symbol_table, &mut errors);
     errors

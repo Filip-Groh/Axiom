@@ -4,11 +4,10 @@ use crate::token::IdentifierToken;
 #[derive(Debug, PartialEq, Clone)]
 pub enum OperatorCategory {
     Arithmetic(OperatorArithmeticType),
-    // Bitwise(),
+    Bitwise(OperatorBitwiseType),
     Comparison(OperatorComparisonType),
-    // Logical(),
+    Logical(OperatorLogicalType),
     Assignment(OperatorAssignmentType),
-    Unary(OperatorUnaryType),
     // Ternary(),
 }
 
@@ -17,7 +16,24 @@ pub enum OperatorArithmeticType {
     Addition,
     Subtraction,
     Multiplication,
-    Division
+    Division,
+    Increment,
+    Decrement,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum OperatorBitwiseType {
+    ShiftLeft,
+    ShiftRight,
+    Or,
+    And
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum OperatorLogicalType {
+    Not,
+    Or,
+    And
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -26,7 +42,13 @@ pub enum OperatorAssignmentType {
     AdditionAssignment,
     SubtractionAssignment,
     MultiplicationAssignment,
-    DivisionAssignment
+    DivisionAssignment,
+    ShiftLeftAssignment,
+    ShiftRightAssignment,
+    BitwiseAndAssignment,
+    BitwiseOrAssignment,
+    AndAssignment,
+    OrAssignment,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -37,11 +59,6 @@ pub enum OperatorComparisonType {
     GreaterThanOrEqual,
     LessThan,
     LessThanOrEqual
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum OperatorUnaryType {
-    Not
 }
 
 #[derive(Debug, PartialEq, Clone)]

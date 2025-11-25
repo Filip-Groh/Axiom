@@ -10,7 +10,7 @@ Syntax:
     
 - Statement 
     = KEYWORD["LET"] IDENTIFIER OPERATOR["="] Expression
-    / IDENTIFIER Assignment
+    / IDENTIFIER OPERATOR["++"] / OPERATOR["--"] / Assignment
     / KEYWORD["RETURN"] Expression
     / KEYWORD["IF"] Expression Scope (KEYWORD["ELSE"] KEYWORD["IF"] Expression Scope)* (KEYWORD["ELSE"] Scope)?
 
@@ -20,21 +20,51 @@ Syntax:
     / OPERATOR["-="] Expression
     / OPERATOR["*="] Expression
     / OPERATOR["/="] Expression
+    / OPERATOR["<<="] Expression
+    / OPERATOR[">>="] Expression
+    / OPERATOR["|="] Expression
+    / OPERATOR["&="] Expression
+    / OPERATOR["||="] Expression
+    / OPERATOR["&&="] Expression
     
 - Expression 
     = Ternary
 
 - Ternary
-    = Equality (PUNCTUATION["?"] Expression PUNCTUATION[":"] Expression)?
+    = ConditionalOr (PUNCTUATION["?"] Expression PUNCTUATION[":"] Expression)?
+
+- ConditionalOr
+    = ConditionalAnd (OPERATOR["||"] ConditionalAnd)*
+
+- ConditionalAnd
+    = Equality (OPERATOR["&&"] Equality)*
 
 - Equality
-   = Additive ((OPERATOR["=="] / OPERATOR["!="] / OPERATOR[">"] / OPERATOR[">="] / OPERATOR["<"] / OPERATOR["<="]) Additive)*
+   = Bitwise ((OPERATOR["=="] / OPERATOR["!="] / OPERATOR[">"] / OPERATOR[">="] / OPERATOR["<"] / OPERATOR["<="]) Bitwise)*
+
+- Bitwise
+    = Shift ((OPERATOR["|"] / OPERATOR["&"]) Shift)*
+
+- Shift
+    = Additive ((OPERATOR["<<"] / OPERATOR[">>"]) Additive)*
     
 - Additive 
     = Multiplicative ((OPERATOR["+"] / OPERATOR["-"]) Multiplicative)*
     
 - Multiplicative 
-    = Primary ((OPERATOR["*"] / OPERATOR["/"]) Primary)*
+    = PreUnary ((OPERATOR["*"] / OPERATOR["/"]) PreUnary)*
+
+- PreUnary
+    = OPERATOR["++"]? PreUnary
+    / OPERATOR["--"]? PreUnary
+    / OPERATOR["+"]? PreUnary
+    / OPERATOR["-"]? PreUnary
+    / OPERATOR["!"]? PreUnary
+    / PostUnary
+
+- PostUnary
+    = Primary OPERATOR["++"]?
+    / Primary OPERATOR["--"]?
     
 - Primary 
     = NUMBER 
@@ -46,6 +76,6 @@ Tokens:
 - NUMBER
 - IDENTIFIER
 - KEYWORD["LET", "FUNCTION", "RETURN", "IF", "ELSE"]
-- OPERATOR["+", "-", "*", "/", "=", "+=", "-=", "*=", "/=", "==", "!=", ">", ">=", "<", "<="]
+- OPERATOR["+", "-", "*", "/", "=", "+=", "-=", "*=", "/=", "==", "!=", ">", ">=", "<", "<=", "++", "--", "<<", ">>", "|", "&", "||", "&&", "!", "<<=", ">>=", "|=", "&=", "||=", "&&="]
 - PARENTHESES["(", ")", "{", "}"]
 - PUNCTUATION[",", ":", "?"]

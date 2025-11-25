@@ -18,7 +18,8 @@ pub enum Node {
     Declaration(DeclarationNode),
     Assignment(AssignmentNode),
     Ternary(TernaryNode),
-    BinaryOperation(BinaryOperationNode),
+    Binary(BinaryNode),
+    Unary(UnaryNode),
     Number(NumberNode),
     Identifier(IdentifierNode),
     Call(CallNode),
@@ -30,7 +31,7 @@ impl Node {
             Node::File(file_node) => file_node.display(indent),
             Node::Number(number_node) => number_node.display(indent),
             Node::Identifier(identifier_node) => identifier_node.display(indent),
-            Node::BinaryOperation(binary_operation_node) => binary_operation_node.display(indent),
+            Node::Binary(binary_operation_node) => binary_operation_node.display(indent),
             Node::Assignment(assignment_node) => assignment_node.display(indent),
             Node::Declaration(declaration_node) => declaration_node.display(indent),
             Node::Scope(scope_node) => scope_node.display(indent),
@@ -40,6 +41,7 @@ impl Node {
             Node::Parameter(parameter_node) => parameter_node.display(indent),
             Node::Ternary(ternary_node) => ternary_node.display(indent),
             Node::IfElse(if_else_node) => if_else_node.display(indent),
+            Node::Unary(unary_node) => unary_node.display(indent),
         }
     }
 
@@ -48,7 +50,7 @@ impl Node {
             Node::File(file_node) => file_node.location(),
             Node::Number(number_node) => number_node.location(),
             Node::Identifier(identifier_node) => identifier_node.location(),
-            Node::BinaryOperation(binary_operation_node) => binary_operation_node.location(),
+            Node::Binary(binary_operation_node) => binary_operation_node.location(),
             Node::Assignment(assignment_node) => assignment_node.location(),
             Node::Declaration(declaration_node) => declaration_node.location(),
             Node::Scope(scope_node) => scope_node.location(),
@@ -58,6 +60,7 @@ impl Node {
             Node::Parameter(parameter_node) => parameter_node.location(),
             Node::Ternary(ternary_node) => ternary_node.location(),
             Node::IfElse(if_else_node) => if_else_node.location(),
+            Node::Unary(unary_node) => unary_node.location(),
         }
     }
 
@@ -66,7 +69,7 @@ impl Node {
             Node::File(file_node) => &DataType::None,
             Node::Number(number_node) => &number_node.data_type,
             Node::Identifier(identifier_node) => &identifier_node.data_type,
-            Node::BinaryOperation(binary_operation_node) => &binary_operation_node.data_type,
+            Node::Binary(binary_operation_node) => &binary_operation_node.data_type,
             Node::Assignment(assignment_node) => &DataType::None,
             Node::Declaration(declaration_node) => &DataType::None,
             Node::Scope(scope_node) => &DataType::None,
@@ -75,7 +78,8 @@ impl Node {
             Node::Call(call_node) => &call_node.data_type,
             Node::Parameter(parameter_node) => &DataType::None,
             Node::Ternary(ternary_node) => &ternary_node.data_type,
-            Node::IfElse(_) => &DataType::None,
+            Node::IfElse(if_else_node) => &DataType::None,
+            Node::Unary(unary_node) => &unary_node.data_type,
         }
     }
 }
@@ -86,7 +90,7 @@ impl Analyzer for Node {
             Node::File(file_node) => file_node.analyze(symbol_table, errors),
             Node::Number(number_node) => number_node.analyze(symbol_table, errors),
             Node::Identifier(identifier_node) => identifier_node.analyze(symbol_table, errors),
-            Node::BinaryOperation(binary_operation_node) => binary_operation_node.analyze(symbol_table, errors),
+            Node::Binary(binary_operation_node) => binary_operation_node.analyze(symbol_table, errors),
             Node::Assignment(assignment_node) =>assignment_node.analyze(symbol_table, errors),
             Node::Declaration(declaration_node) => declaration_node.analyze(symbol_table, errors),
             Node::Scope(scope_node) => scope_node.analyze(symbol_table, errors),
@@ -96,6 +100,7 @@ impl Analyzer for Node {
             Node::Parameter(parameter_node) => parameter_node.analyze(symbol_table, errors),
             Node::Ternary(ternary_node) => ternary_node.analyze(symbol_table, errors),
             Node::IfElse(if_else_node) => if_else_node.analyze(symbol_table, errors),
+            Node::Unary(unary_node) => unary_node.analyze(symbol_table, errors),
         }
     }
 }
@@ -106,7 +111,7 @@ impl CodeGen for Node {
             Node::File(file_node) => file_node.build(code_generator),
             Node::Number(number_node) => number_node.build(code_generator),
             Node::Identifier(identifier_node) => identifier_node.build(code_generator),
-            Node::BinaryOperation(binary_operation_node) => binary_operation_node.build(code_generator),
+            Node::Binary(binary_operation_node) => binary_operation_node.build(code_generator),
             Node::Assignment(assignment_node) =>assignment_node.build(code_generator),
             Node::Declaration(declaration_node) => declaration_node.build(code_generator),
             Node::Scope(scope_node) => scope_node.build(code_generator),
@@ -116,6 +121,7 @@ impl CodeGen for Node {
             Node::Parameter(parameter_node) => parameter_node.build(code_generator),
             Node::Ternary(ternary_node) => ternary_node.build(code_generator),
             Node::IfElse(if_else_node) => if_else_node.build(code_generator),
+            Node::Unary(unary_node) => unary_node.build(code_generator),
         }
     }
 }

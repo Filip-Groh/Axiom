@@ -2,7 +2,7 @@ use std::cmp::max;
 use inkwell::types::BasicMetadataTypeEnum;
 use inkwell::values::{BasicMetadataValueEnum, BasicValue};
 use crate::analyzer::Analyzer;
-use crate::ast::{BinaryOperationNode, IdentifierNode, Node};
+use crate::ast::{BinaryNode, IdentifierNode, Node};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;

@@ -1,8 +1,9 @@
-function test(): i32 {
-    let a = 10
-    return a
-}
-
 function main(): i32 {
-    return test()
+    let a = 5
+    let b = a++
+    let c = a
+
+    a--
+
+    return a
 }

@@ -1,5 +1,5 @@
 mod number;
-mod binary_operation;
+mod binary;
 mod identifier;
 mod assignment;
 mod scope;
@@ -11,9 +11,10 @@ mod call;
 mod parameter;
 mod ternary;
 mod if_else;
+mod unary;
 
 pub use number::*;
-pub use binary_operation::*;
+pub use binary::*;
 pub use identifier::*;
 pub use assignment::*;
 pub use scope::*;
@@ -25,3 +26,4 @@ pub use call::*;
 pub use parameter::*;
 pub use ternary::*;
 pub use if_else::*;
+pub use unary::*;

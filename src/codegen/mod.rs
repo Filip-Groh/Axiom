@@ -3,7 +3,7 @@ use inkwell::context::Context;
 use inkwell::module::Module;
 use inkwell::types::{AnyType, BasicMetadataTypeEnum, FunctionType};
 use inkwell::values::{FunctionValue, IntValue, PointerValue};
-use crate::ast::{BinaryOperationType, FunctionNode, Node};
+use crate::ast::{BinaryType, FunctionNode, Node};
 use crate::datatype::DataType;
 use crate::utils::SymbolTable;
 

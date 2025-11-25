@@ -1,6 +1,6 @@
 use std::error::Error;
 use crate::error::location::{Position, Range};
-use crate::token::{NumberToken, Token, IdentifierToken, OperatorToken, OperatorCategory, OperatorArithmeticType, OperatorAssignmentType, ParenthesesToken, ParenthesesType, ParenthesesState, KeywordToken, OperatorComparisonType, OperatorUnaryType, PunctuationToken, PunctuationType};
+use crate::token::{NumberToken, Token, IdentifierToken, OperatorToken, OperatorCategory, OperatorArithmeticType, OperatorAssignmentType, ParenthesesToken, ParenthesesType, ParenthesesState, KeywordToken, OperatorComparisonType, PunctuationToken, PunctuationType, OperatorBitwiseType, OperatorLogicalType};
 
 pub struct Lexer{
     chars: Vec<char>,
@@ -128,7 +128,7 @@ impl Lexer {
     
     fn is_operator(current_char: char) -> bool {
         match current_char {
-            '+' | '-' | '*' | '/' | '=' | '!' | '>' | '<' => true,
+            '+' | '-' | '*' | '/' | '=' | '!' | '>' | '<' | '|' | '&' => true,
             _ => false
         }
     }
@@ -139,39 +139,145 @@ impl Lexer {
         
         match current_operator {
             '+' => {
-                self.parse_double_operator(start_position, '=', OperatorCategory::Arithmetic(OperatorArithmeticType::Addition), OperatorCategory::Assignment(OperatorAssignmentType::AdditionAssignment));
+                self.parse_double_operator(start_position, |char| {
+                    match char {
+                        '=' => Some(OperatorCategory::Assignment(OperatorAssignmentType::AdditionAssignment)),
+                        '+' => Some(OperatorCategory::Arithmetic(OperatorArithmeticType::Increment)),
+                        _ => None
+                    }
+                }, OperatorCategory::Arithmetic(OperatorArithmeticType::Addition));
             }
             '-' => {
-                self.parse_double_operator(start_position, '=', OperatorCategory::Arithmetic(OperatorArithmeticType::Subtraction), OperatorCategory::Assignment(OperatorAssignmentType::SubtractionAssignment));
+                self.parse_double_operator(start_position, |char| {
+                    match char {
+                        '=' => Some(OperatorCategory::Assignment(OperatorAssignmentType::SubtractionAssignment)),
+                        '-' => Some(OperatorCategory::Arithmetic(OperatorArithmeticType::Decrement)),
+                        _ => None
+                    }
+                }, OperatorCategory::Arithmetic(OperatorArithmeticType::Subtraction));
             }
             '*' => {
-                self.parse_double_operator(start_position, '=', OperatorCategory::Arithmetic(OperatorArithmeticType::Multiplication), OperatorCategory::Assignment(OperatorAssignmentType::MultiplicationAssignment));
+                self.parse_double_operator(start_position, |char| {
+                    match char {
+                        '=' => Some(OperatorCategory::Assignment(OperatorAssignmentType::MultiplicationAssignment)),
+                        _ => None
+                    }
+                }, OperatorCategory::Arithmetic(OperatorArithmeticType::Multiplication));
             }
             '/' => {
-                self.parse_double_operator(start_position, '=', OperatorCategory::Arithmetic(OperatorArithmeticType::Division), OperatorCategory::Assignment(OperatorAssignmentType::DivisionAssignment));
+                self.parse_double_operator(start_position, |char| {
+                    match char {
+                        '=' => Some(OperatorCategory::Assignment(OperatorAssignmentType::DivisionAssignment)),
+                        _ => None
+                    }
+                }, OperatorCategory::Arithmetic(OperatorArithmeticType::Division));
             }
             '=' => {
-                self.parse_double_operator(start_position, '=', OperatorCategory::Assignment(OperatorAssignmentType::Assignment), OperatorCategory::Comparison(OperatorComparisonType::Equal));
+                self.parse_double_operator(start_position, |char| {
+                    match char {
+                        '=' => Some(OperatorCategory::Comparison(OperatorComparisonType::Equal)),
+                        _ => None
+                    }
+                }, OperatorCategory::Assignment(OperatorAssignmentType::Assignment));
             }
             '!' => {
-                self.parse_double_operator(start_position, '=', OperatorCategory::Unary(OperatorUnaryType::Not), OperatorCategory::Comparison(OperatorComparisonType::NotEqual));
+                self.parse_double_operator(start_position, |char| {
+                    match char {
+                        '=' => Some(OperatorCategory::Comparison(OperatorComparisonType::NotEqual)),
+                        _ => None
+                    }
+                }, OperatorCategory::Logical(OperatorLogicalType::Not));
             }
             '>' => {
-                self.parse_double_operator(start_position, '=', OperatorCategory::Comparison(OperatorComparisonType::GreaterThan), OperatorCategory::Comparison(OperatorComparisonType::GreaterThanOrEqual));
+                self.parse_triple_operator(start_position, |char| {
+                    match char {
+                        '=' => Some((OperatorCategory::Comparison(OperatorComparisonType::GreaterThanOrEqual), false)),
+                        '>' => Some((OperatorCategory::Bitwise(OperatorBitwiseType::ShiftRight), true)),
+                        _ => None
+                    }
+                }, |char| {
+                    match char {
+                        '=' => Some(OperatorCategory::Assignment(OperatorAssignmentType::ShiftRightAssignment)),
+                        _ => None
+                    }
+                }, OperatorCategory::Comparison(OperatorComparisonType::GreaterThan));
             }
             '<' => {
-                self.parse_double_operator(start_position, '=', OperatorCategory::Comparison(OperatorComparisonType::LessThan), OperatorCategory::Comparison(OperatorComparisonType::LessThanOrEqual));
+                self.parse_triple_operator(start_position, |char| {
+                    match char {
+                        '=' => Some((OperatorCategory::Comparison(OperatorComparisonType::LessThanOrEqual), false)),
+                        '<' => Some((OperatorCategory::Bitwise(OperatorBitwiseType::ShiftLeft), true)),
+                        _ => None
+                    }
+                }, |char| {
+                    match char {
+                        '=' => Some(OperatorCategory::Assignment(OperatorAssignmentType::ShiftLeftAssignment)),
+                        _ => None
+                    }
+                }, OperatorCategory::Comparison(OperatorComparisonType::LessThan));
+            }
+            '|' => {
+                self.parse_triple_operator(start_position, |char| {
+                    match char {
+                        '=' => Some((OperatorCategory::Assignment(OperatorAssignmentType::BitwiseOrAssignment), false)),
+                        '|' => Some((OperatorCategory::Logical(OperatorLogicalType::Or), true)),
+                        _ => None
+                    }
+                }, |char| {
+                    match char {
+                        '=' => Some(OperatorCategory::Assignment(OperatorAssignmentType::OrAssignment)),
+                        _ => None
+                    }
+                }, OperatorCategory::Bitwise(OperatorBitwiseType::Or));
+            }
+            '&' => {
+                self.parse_triple_operator(start_position, |char| {
+                    match char {
+                        '=' => Some((OperatorCategory::Assignment(OperatorAssignmentType::BitwiseAndAssignment), false)),
+                        '&' => Some((OperatorCategory::Logical(OperatorLogicalType::And), true)),
+                        _ => None
+                    }
+                }, |char| {
+                    match char {
+                        '=' => Some(OperatorCategory::Assignment(OperatorAssignmentType::AndAssignment)),
+                        _ => None
+                    }
+                }, OperatorCategory::Bitwise(OperatorBitwiseType::And));
             }
             _ => ()
         }
     }
     
-    fn parse_double_operator(&mut self, start_position: Position, second_char: char, singe_operator_type: OperatorCategory, double_operator_type: OperatorCategory) {
+    fn parse_double_operator<F>(&mut self, start_position: Position, second_char_selector: F, singe_operator_type: OperatorCategory) where F: Fn(char) -> Option<OperatorCategory> {
         let mut token_type = singe_operator_type;
 
-        if let Some(char) = self.peek() && char == second_char {
+        if let Some(char) = self.peek() && let Some(double_operator_type) = second_char_selector(char) {
             self.step();
             token_type = double_operator_type;
+        }
+
+        let location = Range::new(start_position, self.position.clone());
+        self.tokens.push(Token::Operator(OperatorToken::new(token_type, location)))
+    }
+
+    fn parse_triple_operator<F1, F2>(&mut self, start_position: Position, second_char_selector: F1, third_char_selector: F2, singe_operator_type: OperatorCategory) where F1: Fn(char) -> Option<(OperatorCategory, bool)>, F2: Fn(char) -> Option<OperatorCategory> {
+        let mut token_type = singe_operator_type;
+
+        if let Some(char) = self.peek() && let Some((double_operator_type, allow_third)) = second_char_selector(char) {
+            self.step();
+            token_type = double_operator_type;
+            
+            if !allow_third {
+                let location = Range::new(start_position, self.position.clone());
+                self.tokens.push(Token::Operator(OperatorToken::new(token_type, location)));
+
+                return;
+            }
+        }
+
+        if let Some(char) = self.peek() && let Some(triple_operator_type) = third_char_selector(char) {
+            self.step();
+            token_type = triple_operator_type;
         }
 
         let location = Range::new(start_position, self.position.clone());

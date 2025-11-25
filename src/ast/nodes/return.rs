@@ -3,9 +3,10 @@ use crate::ast::{Node, ParameterNode};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::{Location, Range};
+use crate::error::location::{Location, Position, Range};
 use crate::utils::SymbolTable;
 
+#[derive(Debug)]
 pub struct ReturnNode {
     location: Range,
     pub expression: Box<Node>,
@@ -22,6 +23,14 @@ impl ReturnNode {
     pub fn display(&self, indent: usize) {
         println!("{}- return ", " ".repeat(indent * 4));
         self.expression.display(indent + 1);
+    }
+
+    pub fn get_node_at(&self, position: &Position) -> Option<Box<Node>> {
+        if !position.is_in_range(&self.location()) {
+            return None;
+        }
+
+        self.expression.get_node_at(position)
     }
 }
 

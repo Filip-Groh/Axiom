@@ -1,14 +1,14 @@
 use std::cmp::max;
-use inkwell::types::BasicMetadataTypeEnum;
-use inkwell::values::{BasicMetadataValueEnum, BasicValue};
+use inkwell::values::{BasicMetadataValueEnum,};
 use crate::analyzer::Analyzer;
-use crate::ast::{BinaryNode, IdentifierNode, Node};
+use crate::ast::{IdentifierNode, Node};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::{Location, Range};
+use crate::error::location::{Location, Position, Range};
 use crate::utils::SymbolTable;
 
+#[derive(Debug)]
 pub struct CallNode {
     location: Range,
     pub data_type: DataType,
@@ -33,6 +33,18 @@ impl CallNode {
         }
         println!("{})", " ".repeat(indent * 4));
     }
+
+    pub fn get_node_at(&self, position: &Position) -> Option<Box<Node>> {
+        if !position.is_in_range(&self.location()) {
+            return None;
+        }
+
+        if position.is_in_range(&self.identifier_node.location()) {
+            return self.identifier_node.get_node_at(position);
+        }
+
+        self.parameters.iter().map(|parameter_node| parameter_node.get_node_at(position)).filter(|node| node.is_some()).next()?
+    }
 }
 
 impl Location for CallNode {
@@ -44,6 +56,7 @@ impl Location for CallNode {
 impl Analyzer for CallNode {
     fn analyze(&mut self, symbol_table: &mut SymbolTable<String, DataType>, errors: &mut Vec<AxiomError>) {
         let function = symbol_table.get(&self.identifier_node.identifier_token.name);
+
         match function {
             Some(data_type) => {
                 if let DataType::Function(parameter_data_types, output_data_type) = data_type.clone() {
@@ -74,6 +87,8 @@ impl Analyzer for CallNode {
                 errors.push(AxiomError::IdentifierUsedBeforeDeclaration(self.identifier_node.location(), self.identifier_node.identifier_token.name.clone()));
             }
         }
+
+        self.identifier_node.analyze(symbol_table, errors);
     }
 }
 

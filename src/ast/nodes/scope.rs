@@ -1,11 +1,12 @@
 use crate::analyzer::Analyzer;
-use crate::ast::{Node, ParameterNode};
+use crate::ast::{Node};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::{Location, Range};
+use crate::error::location::{Location, Position, Range};
 use crate::utils::SymbolTable;
 
+#[derive(Debug)]
 pub struct ScopeNode {
     location: Range,
     pub statements: Vec<Box<Node>>
@@ -25,6 +26,14 @@ impl ScopeNode {
             statement.display(indent + 1);
         }
         println!("{}}}", " ".repeat(indent * 4));
+    }
+
+    pub fn get_node_at(&self, position: &Position) -> Option<Box<Node>> {
+        if !position.is_in_range(&self.location()) {
+            return None;
+        }
+
+        self.statements.iter().map(|node| node.get_node_at(position)).filter(|node| node.is_some()).next()?
     }
 }
 

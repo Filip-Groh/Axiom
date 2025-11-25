@@ -3,9 +3,10 @@ use crate::ast::{IdentifierNode, Node};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::{Location, Range};
+use crate::error::location::{Location, Position, Range};
 use crate::utils::SymbolTable;
 
+#[derive(Debug)]
 pub struct AssignmentNode {
     location: Range,
     pub identifier_node: Box<IdentifierNode>,
@@ -24,6 +25,18 @@ impl AssignmentNode {
     pub fn display(&self, indent: usize) {
         println!("{}- {} = ", " ".repeat(indent * 4), self.identifier_node.identifier_token.name);
         self.expression.display(indent + 1);
+    }
+
+    pub fn get_node_at(&self, position: &Position) -> Option<Box<Node>> {
+        if !position.is_in_range(&self.location()) {
+            return None;
+        }
+
+        if position.is_in_range(&self.identifier_node.location()) {
+            return self.identifier_node.get_node_at(position);
+        }
+
+        self.expression.get_node_at(position)
     }
 }
 

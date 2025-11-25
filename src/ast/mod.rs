@@ -3,11 +3,12 @@ pub use crate::ast::nodes::*;
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::{Location, Range};
+use crate::error::location::{Location, Position, Range};
 use crate::utils::SymbolTable;
 
 mod nodes;
 
+#[derive(Debug)]
 pub enum Node {
     File(FileNode),
     Function(FunctionNode),
@@ -66,20 +67,39 @@ impl Node {
 
     pub fn data_type(&self) -> &DataType {
         match &self {
-            Node::File(file_node) => &DataType::None,
+            Node::File(_) => &DataType::None,
             Node::Number(number_node) => &number_node.data_type,
             Node::Identifier(identifier_node) => &identifier_node.data_type,
             Node::Binary(binary_operation_node) => &binary_operation_node.data_type,
-            Node::Assignment(assignment_node) => &DataType::None,
-            Node::Declaration(declaration_node) => &DataType::None,
-            Node::Scope(scope_node) => &DataType::None,
+            Node::Assignment(_) => &DataType::None,
+            Node::Declaration(_) => &DataType::None,
+            Node::Scope(_) => &DataType::None,
             Node::Function(function_node) => &function_node.data_type,
-            Node::Return(return_node) => &DataType::None,
+            Node::Return(_) => &DataType::None,
             Node::Call(call_node) => &call_node.data_type,
-            Node::Parameter(parameter_node) => &DataType::None,
+            Node::Parameter(_) => &DataType::None,
             Node::Ternary(ternary_node) => &ternary_node.data_type,
-            Node::IfElse(if_else_node) => &DataType::None,
+            Node::IfElse(_) => &DataType::None,
             Node::Unary(unary_node) => &unary_node.data_type,
+        }
+    }
+
+    pub fn get_node_at(&self, position: &Position) -> Option<Box<Node>> {
+        match &self {
+            Node::File(file_node) => file_node.get_node_at(position),
+            Node::Function(function_node) => function_node.get_node_at(position),
+            Node::Parameter(parameter_node) => parameter_node.get_node_at(position),
+            Node::Scope(scope_node) => scope_node.get_node_at(position),
+            Node::IfElse(if_else_node) => if_else_node.get_node_at(position),
+            Node::Return(return_node) => return_node.get_node_at(position),
+            Node::Declaration(declaration_node) => declaration_node.get_node_at(position),
+            Node::Assignment(assignment_node) => assignment_node.get_node_at(position),
+            Node::Ternary(ternary_node) => ternary_node.get_node_at(position),
+            Node::Binary(binary_operation_node) => binary_operation_node.get_node_at(position),
+            Node::Unary(unary_node) => unary_node.get_node_at(position),
+            Node::Number(number_node) => number_node.get_node_at(position),
+            Node::Identifier(identifier_node) => identifier_node.get_node_at(position),
+            Node::Call(call_node) => call_node.get_node_at(position)
         }
     }
 }

@@ -1,12 +1,14 @@
 use crate::analyzer::Analyzer;
-use crate::ast::IdentifierNode;
+use crate::ast::{Node};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::{Location, Range};
+use crate::error::location::{Location, Position, Range};
 use crate::token::{NumberToken};
 use crate::utils::SymbolTable;
 
+#[derive(Clone)]
+#[derive(Debug)]
 pub struct NumberNode {
     location: Range,
     pub data_type: DataType,
@@ -24,6 +26,14 @@ impl NumberNode {
     
     pub fn display(&self, indent: usize) {
         println!("{}- {}", " ".repeat(indent * 4), self.number_token.value);
+    }
+
+    pub fn get_node_at(&self, position: &Position) -> Option<Box<Node>> {
+        if !position.is_in_range(&self.location()) {
+            return None;
+        }
+
+        Some(Box::from(Node::Number(self.clone())))
     }
 }
 

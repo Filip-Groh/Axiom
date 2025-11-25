@@ -4,7 +4,7 @@ use std::fs;
 use std::io::Write;
 use std::net::SocketAddr;
 use lsp_server::{Connection, Message, Notification, Request as ServerRequest, RequestId, Response};
-use lsp_types::{CompletionOptions, DidChangeTextDocumentParams, DidOpenTextDocumentParams, Hover, HoverContents, HoverProviderCapability, InitializeParams, MarkedString, MessageType, OneOf, PositionEncodingKind, ServerCapabilities, ShowMessageRequestParams, TextDocumentSyncCapability, TextDocumentSyncKind, TextDocumentSyncOptions, Uri};
+use lsp_types::{CompletionOptions, DidChangeTextDocumentParams, DidOpenTextDocumentParams, Hover, HoverContents, HoverParams, HoverProviderCapability, InitializeParams, MarkedString, MessageType, OneOf, PositionEncodingKind, ServerCapabilities, ShowMessageRequestParams, TextDocumentSyncCapability, TextDocumentSyncKind, TextDocumentSyncOptions, Uri};
 use lsp_types::notification::{DidChangeTextDocument, DidOpenTextDocument, Notification as _, ShowMessage};
 use lsp_types::request::{HoverRequest, Request, ShowMessageRequest};
 
@@ -71,13 +71,36 @@ fn handle_request(connection: &Connection, req: &ServerRequest, files: &mut Hash
     match req.method.as_str() {
         HoverRequest::METHOD => {
             log("[Axiom LSP] - Hover")?;
-            let hover = Hover {
-                contents: HoverContents::Scalar(MarkedString::String(
-                    "Hello from *Axiom LSP*".into(),
-                )),
-                range: None,
-            };
-            send_ok(connection, req.id.clone(), &hover)?;
+            let params: HoverParams = serde_json::from_value(req.params.clone())?;
+            let uri = params.text_document_position_params.text_document.uri;
+            let position = params.text_document_position_params.position;
+
+            let file_content = files.get(&uri).ok_or(anyhow!("File not found!"))?;
+
+            let tokens = Lexer::new(file_content).parse().unwrap();
+
+            let mut ast = Parser::new(tokens).parse()?;
+
+            let mut symbol_table = SymbolTable::new();
+            symbol_table.add_build_in_types();
+
+            let mut errors = vec![];
+
+            ast.analyze(&mut symbol_table, &mut errors);
+
+            let hover_node = ast.get_node_at(&position.into());
+
+            if let Some(node) = hover_node {
+                let hover = Hover {
+                    contents: HoverContents::Scalar(MarkedString::String(
+                        format!("{}", node.data_type())
+                    )),
+                    range: Some(node.location().into()),
+                };
+                send_ok(connection, req.id.clone(), &hover)?;
+            } else {
+                send_ok(connection, req.id.clone(), &None::<String>)?;
+            }
         }
         _ => {}
     }

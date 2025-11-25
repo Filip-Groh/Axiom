@@ -3,9 +3,10 @@ use crate::ast::{Node};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::{Location, Range};
+use crate::error::location::{Location, Position, Range};
 use crate::utils::SymbolTable;
 
+#[derive(Debug)]
 pub struct TernaryNode {
     location: Range,
     pub data_type: DataType,
@@ -32,6 +33,22 @@ impl TernaryNode {
         self.consequent.display(indent + 1);
         println!("{}- : ", " ".repeat(indent * 4));
         self.alternative.display(indent + 1);
+    }
+
+    pub fn get_node_at(&self, position: &Position) -> Option<Box<Node>> {
+        if !position.is_in_range(&self.location()) {
+            return None;
+        }
+
+        if position.is_in_range(&self.condition.location()) {
+            return self.condition.get_node_at(position);
+        }
+
+        if position.is_in_range(&self.consequent.location()) {
+            return self.consequent.get_node_at(position);
+        }
+
+        self.alternative.get_node_at(position)
     }
 }
 

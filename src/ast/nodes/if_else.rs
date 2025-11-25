@@ -4,9 +4,10 @@ use crate::ast::{Node, ScopeNode};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::{Location, Range};
+use crate::error::location::{Location, Position, Range};
 use crate::utils::SymbolTable;
 
+#[derive(Debug)]
 pub struct IfElseNode {
     location: Range,
     pub condition: Box<Node>,
@@ -40,6 +41,30 @@ impl IfElseNode {
         if let Some(alternative) = &self.alternative {
             println!("{}- else ", " ".repeat(indent * 4));
             alternative.display(indent + 1);
+        }
+    }
+
+    pub fn get_node_at(&self, position: &Position) -> Option<Box<Node>> {
+        if !position.is_in_range(&self.location()) {
+            return None;
+        }
+
+        if position.is_in_range(&self.condition.location()) {
+            return self.condition.get_node_at(position);
+        }
+
+        if position.is_in_range(&self.consequent.location()) {
+            return self.consequent.get_node_at(position);
+        }
+
+        if let Some(node) = self.conditional_alternatives.iter().map(|(condition_node, consequent_node)| vec![condition_node.get_node_at(position), consequent_node.get_node_at(position)]).flatten().filter(|node| node.is_some()).next() {
+            return node;
+        }
+        
+        if let Some(node) = &self.alternative {
+            node.get_node_at(position)
+        } else {
+            None
         }
     }
 }

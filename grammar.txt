@@ -10,7 +10,11 @@ Syntax:
     
 - Statement 
     = KEYWORD["LET"] IDENTIFIER OPERATOR["="] Expression
-    / IDENTIFIER OPERATOR["++"] / OPERATOR["--"] / Assignment
+    / IDENTIFIER
+        OPERATOR["++"]
+        / OPERATOR["--"]
+        / PARENTHESES["("] ((Expression PUNCTUATION[","])* Expression)? PARENTHESES[")"]
+        / Assignment
     / KEYWORD["RETURN"] Expression
     / KEYWORD["IF"] Expression Scope (KEYWORD["ELSE"] KEYWORD["IF"] Expression Scope)* (KEYWORD["ELSE"] Scope)?
 

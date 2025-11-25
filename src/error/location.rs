@@ -21,6 +21,10 @@ impl Position {
             column,
         }
     }
+
+    pub fn is_in_range(&self, range: &Range) -> bool {
+        self >= &range.start && self <= &range.end
+    }
 }
 
 impl PartialOrd for Position {
@@ -33,6 +37,15 @@ impl PartialOrd for Position {
             return Some(Ordering::Greater)
         }
         None
+    }
+}
+
+impl From<LSPPosition> for Position {
+    fn from(value: LSPPosition) -> Self {
+        Self {
+            line: value.line as usize,
+            column: value.character as usize
+        }
     }
 }
 

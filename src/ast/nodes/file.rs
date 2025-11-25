@@ -1,11 +1,12 @@
 use crate::analyzer::Analyzer;
-use crate::ast::{DeclarationNode, FunctionNode};
+use crate::ast::{DeclarationNode, FunctionNode, Node};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::{Location, Range};
+use crate::error::location::{Location, Position, Range};
 use crate::utils::SymbolTable;
 
+#[derive(Debug)]
 pub struct FileNode {
     location: Range,
     pub functions: Vec<Box<FunctionNode>>
@@ -23,6 +24,14 @@ impl FileNode {
         for function in &self.functions {
             function.display(indent);
         }
+    }
+    
+    pub fn get_node_at(&self, position: &Position) -> Option<Box<Node>> {
+        if !position.is_in_range(&self.location()) {
+            return None;
+        }
+        
+        self.functions.iter().map(|function_node| function_node.get_node_at(position)).filter(|node| node.is_some()).next()?
     }
 }
 

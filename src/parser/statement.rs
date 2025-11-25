@@ -1,8 +1,8 @@
-use crate::ast::{DeclarationNode, IdentifierNode, IfElseNode, Node, ReturnNode, ScopeNode, UnaryNode, UnaryType};
+use crate::ast::{CallNode, DeclarationNode, IdentifierNode, IfElseNode, Node, ReturnNode, ScopeNode, UnaryNode, UnaryType};
 use crate::error::AxiomError;
 use crate::error::location::{Location, Range};
 use crate::parser::Parser;
-use crate::token::{KeywordType, OperatorArithmeticType, OperatorAssignmentType, OperatorCategory, Token};
+use crate::token::{KeywordType, OperatorArithmeticType, OperatorAssignmentType, OperatorCategory, ParenthesesState, ParenthesesType, PunctuationType, Token};
 
 impl Parser {
     pub fn statement(&mut self) -> Result<Box<Node>, AxiomError> {
@@ -132,6 +132,49 @@ impl Parser {
 
                         Ok(Box::new(node))
                     },
+                    Token::Parentheses(parentheses_token) if matches!(parentheses_token.parentheses_type, ParenthesesType::Round(ParenthesesState::Opening)) => {
+                        self.step();
+
+                        let mut parameters = vec![];
+                        let mut parameter_locations = vec![identifier_node.location(), parentheses_token.location()];
+
+                        let mut first_loop = true;
+                        loop {
+                            let token = self.current_token.clone().ok_or(AxiomError::UnexpectedEOF(self.get_next_position_from_last_token_location()))?;
+
+                            if let Token::Parentheses(parentheses_token) = &token && matches!(parentheses_token.parentheses_type, ParenthesesType::Round(ParenthesesState::Closing)) {
+                                parameter_locations.push(parentheses_token.location());
+
+                                self.step();
+
+                                break
+                            }
+
+                            if !first_loop {
+                                if !matches!(&token, Token::Punctuation(punctuation_token) if matches!(punctuation_token.punctuation_type, PunctuationType::Comma)) {
+                                    return Err(AxiomError::SyntaxError(self.get_current_location_from_current_token(), "Expected ',' or ')'".into()))
+                                }
+
+                                parameter_locations.push(token.location());
+
+                                self.step()
+                            }
+
+                            let expression = self.expression()?;
+                            let expression_location = expression.location();
+
+                            parameters.push(expression);
+                            parameter_locations.push(expression_location);
+
+                            first_loop = false;
+                        }
+
+                        let location = Range::from_ranges(parameter_locations);
+                        let call_node = CallNode::new(location, Box::from(identifier_node), parameters);
+                        let node = Node::Call(call_node);
+
+                        Ok(Box::from(node))
+                    }
                     _ => {
                         let assignment = self.assignment(Box::from(identifier_node))?;
 

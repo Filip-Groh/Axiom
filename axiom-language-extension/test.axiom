@@ -1,9 +1,15 @@
+function inc(x: i32): i32 {
+    return x + 1
+}
+
 function main(): i32 {
     let a = 5
     let b = a++
-    let c = a
+    let c = inc(1)
 
     a--
+
+    inc(1)
 
     return a
 }

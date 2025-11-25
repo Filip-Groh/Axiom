@@ -1,12 +1,13 @@
 use inkwell::types::BasicMetadataTypeEnum;
 use crate::analyzer::Analyzer;
-use crate::ast::{IdentifierNode, NumberNode};
+use crate::ast::{IdentifierNode, Node};
 use crate::codegen::{CodeGen, CodeGenerator};
 use crate::datatype::DataType;
 use crate::error::AxiomError;
-use crate::error::location::{Location, Range};
+use crate::error::location::{Location, Position, Range};
 use crate::utils::SymbolTable;
 
+#[derive(Debug)]
 pub struct ParameterNode {
     location: Range,
     pub identifier_node: Box<IdentifierNode>,
@@ -24,6 +25,18 @@ impl ParameterNode {
 
     pub fn display(&self, indent: usize) {
         println!("{}- {}: {}", " ".repeat(indent * 4), self.identifier_node.identifier_token.name, self.type_node.identifier_token.name);
+    }
+
+    pub fn get_node_at(&self, position: &Position) -> Option<Box<Node>> {
+        if !position.is_in_range(&self.location()) {
+            return None;
+        }
+
+        if position.is_in_range(&self.identifier_node.location()) {
+            return self.identifier_node.get_node_at(position);
+        }
+
+        self.type_node.get_node_at(position)
     }
 }
 
@@ -47,6 +60,8 @@ impl Analyzer for ParameterNode {
                 errors.push(AxiomError::IdentifierUsedBeforeDeclaration(self.type_node.location(), self.type_node.identifier_token.name.clone()));
             }
         }
+        
+        self.type_node.analyze(symbol_table, errors);
     }
 }
 

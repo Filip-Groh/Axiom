@@ -2,7 +2,21 @@
 <module type="EMPTY_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/cli/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/lexer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/lsp/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/parser/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/temp/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/_compiler/analyzer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/_compiler/ast/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/_compiler/codegen/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/_compiler/datatype/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/_compiler/error/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/_compiler/lexer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/_compiler/parser/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/_compiler/token/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/compiler/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/crates/temp/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

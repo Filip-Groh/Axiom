@@ -24,7 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const document = editor.document
 		const path = document.uri.path
 
-		const command = `/mnt/d/Projects/Axiom/target/debug/Axiom run ${path}`
+		const command = `axiom run ${path}`
 
 		if (!terminal || terminal.exitStatus) {
 			terminal = vscode.window.createTerminal({ name: "Axiom" })

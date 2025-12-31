@@ -1,0 +1,14 @@
+mod number;
+mod binary;
+mod identifier;
+mod assignment;
+mod scope;
+mod function;
+mod file;
+mod r#return;
+mod declaration;
+mod call;
+mod parameter;
+mod ternary;
+mod if_else;
+mod unary;

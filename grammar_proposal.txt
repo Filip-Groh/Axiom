@@ -1,0 +1,168 @@
+Tokens:
+- NUMBER
+- IDENTIFIER
+- KEYWORD["LET", "FUNCTION", "RETURN", "IF", "ELSE", "MODULE", "USE", "AS"]
+- OPERATOR["+", "-", "*", "/", "=", "+=", "-=", "*=", "/=", "==", "!=", ">", ">=", "<", "<=", "++", "--", "<<", ">>", "|", "&", "||", "&&", "!", "<<=", ">>=", "|=", "&=", "||=", "&&="]
+- PARENTHESES["(", ")", "{", "}"]
+- PUNCTUATION[",", ":", "?"]
+- ACCESSOR["::"]
+
+Syntax:
+- File 
+    = (KEYWORD["MODULE"] IdentifierChain)?
+    + (KEYWORD["USE"] UseIdentifierChain)*
+    + (KEYWORD["FUNCTION"] IDENTIFIER PARENTHESES["("] ((Parameter PUNCTUATION[","])* Parameter)? PARENTHESES[")"] (PUNCTUATION[":"] IdentifierChain)? Scope)*
+
+- UseIdentifierChain
+    = IDENTIFIER (ACCESSOR["::"] IDENTIFIER)* ACCESSOR["::"] (AliasIdentifier / OPERATOR["*"] / (PARENTHESES["{"] AliasIdentifier (PUNCTUATION[","] AliasIdentifier)* PARENTHESES["}"]))
+
+- AliasIdentifier
+    = IDENTIFIER (KEYWORD["AS"] IDENTIFIER)?
+    
+- Parameter
+    = IDENTIFIER PUNCTUATION[":"] IdentifierChain
+    
+- Scope 
+    = PARENTHESES["{"] Statement* PARENTHESES["}"]
+    
+- Statement 
+    = KEYWORD["LET"] IDENTIFIER OPERATOR["="] Expression
+    / IDENTIFIER OPERATOR["++"] / OPERATOR["--"] / Assignment
+    / IdentifierChain PARENTHESES["("] ((Expression PUNCTUATION[","])* Expression)? PARENTHESES[")"]
+    / KEYWORD["RETURN"] Expression
+    / KEYWORD["IF"] Expression Scope (KEYWORD["ELSE"] KEYWORD["IF"] Expression Scope)* (KEYWORD["ELSE"] Scope)?
+
+- Assignment
+    = OPERATOR["="] Expression
+    / OPERATOR["+="] Expression
+    / OPERATOR["-="] Expression
+    / OPERATOR["*="] Expression
+    / OPERATOR["/="] Expression
+    / OPERATOR["<<="] Expression
+    / OPERATOR[">>="] Expression
+    / OPERATOR["|="] Expression
+    / OPERATOR["&="] Expression
+    / OPERATOR["||="] Expression
+    / OPERATOR["&&="] Expression
+    
+- Expression 
+    = Ternary
+
+- Ternary
+    = ConditionalOr (PUNCTUATION["?"] Expression PUNCTUATION[":"] Expression)?
+
+- ConditionalOr
+    = ConditionalAnd (OPERATOR["||"] ConditionalAnd)*
+
+- ConditionalAnd
+    = Equality (OPERATOR["&&"] Equality)*
+
+- Equality
+   = Bitwise ((OPERATOR["=="] / OPERATOR["!="] / OPERATOR[">"] / OPERATOR[">="] / OPERATOR["<"] / OPERATOR["<="]) Bitwise)*
+
+- Bitwise
+    = Shift ((OPERATOR["|"] / OPERATOR["&"]) Shift)*
+
+- Shift
+    = Additive ((OPERATOR["<<"] / OPERATOR[">>"]) Additive)*
+    
+- Additive 
+    = Multiplicative ((OPERATOR["+"] / OPERATOR["-"]) Multiplicative)*
+    
+- Multiplicative 
+    = PreUnary ((OPERATOR["*"] / OPERATOR["/"]) PreUnary)*
+
+- PreUnary
+    = OPERATOR["++"]? PreUnary
+    / OPERATOR["--"]? PreUnary
+    / OPERATOR["+"]? PreUnary
+    / OPERATOR["-"]? PreUnary
+    / OPERATOR["!"]? PreUnary
+    / PostUnary
+
+- PostUnary
+    = Primary OPERATOR["++"]?
+    / Primary OPERATOR["--"]?
+    
+- Primary 
+    = NUMBER 
+    / IdentifierChain
+    / PARENTHESES["("] Expression PARENTHESES[")"]
+    / IdentifierChain PARENTHESES["("] ((Expression PUNCTUATION[","])* Expression)? PARENTHESES[")"]
+
+- IdentifierChain
+    = IDENTIFIER (ACCESSOR["::"] IDENTIFIER)*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+floats => cast => bound int, result monad, connected functions (use of "as" keyword only when can't fail (in bound) / use function returning result)
+array => index access => bound int, result monad, connected functions (use of "[index]" syntax only when can't fail (in bound) / use function return result)
+string => array, connected functions
+result monad => enum, generics
+connected functions => structs
+enum => structs
+generics => traits, structs
+
+bound int => none
+structs => none
+
+order:
+structs + connected functions
+bound int
+
+traits + generics
+
+enums
+
+floats
+
+gc
+
+array
+string
+
+
+
+
+
+build
+packages
+  - [package_name]
+    - [version]
+      - src
+        - bin.axiom / lib.axiom
+      - axiom.toml
+docs
+  - [perfectly_matched_namespace_structure]
+    - math.docs.axiom
+  - bin.docs.axiom / lib.docs.axiom
+tests
+  - unit
+    - [perfectly_matched_namespace_structure]
+      - math.text.axiom
+    - bin.test.axiom / lib.test.axiom
+  - integration / other developer named directory
+    - some_integration_test.test.axiom
+src
+  - [nested_namespace]
+    - math.axiom {
+      module axiom::math (implicit by directory structure / explicit)
+      use axiom::module => module::my_func()
+      use axiom::module::my_func => my_func()
+      use axiom::module::{my_func, my_func_2} => my_func(), my_func_2()
+      use axiom::module::* => my_func(), my_func_2()
+    }
+  - bin.axiom / lib.axiom
+axiom.toml
+axiom.lock
